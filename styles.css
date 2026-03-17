@@ -1,0 +1,166 @@
+:root {
+  --background: #ffffff;
+  --border: #d6d6d1;
+  --text: #171717;
+  --muted: #6a6a66;
+  --link: #1f3d63;
+  --link-hover: #142a45;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.14em;
+}
+
+a:hover {
+  color: var(--link-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.page {
+  width: min(100% - 2rem, 40rem);
+  margin: 0 auto;
+  padding: 5.5rem 0 4rem;
+}
+
+.masthead {
+  padding: 0;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 7vw, 3.8rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.subtitle {
+  margin-top: 0.85rem;
+  color: var(--muted);
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+}
+
+.summary,
+.status {
+  margin-top: 1.4rem;
+}
+
+.summary p,
+.status p {
+  max-width: 32rem;
+  font-size: 1.02rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: transparent;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.action:hover {
+  border-color: var(--muted);
+  color: var(--text);
+}
+
+.action-primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: #faf8f3;
+}
+
+.action-primary:hover {
+  background: #0f0e0c;
+  color: #faf8f3;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.98rem;
+  font-style: italic;
+}
+
+.contact {
+  margin-top: 0.8rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.site-footer {
+  width: min(100% - 2rem, 40rem);
+  margin: 0 auto;
+  padding: 0 0 3rem;
+}
+
+.site-footer p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: min(100% - 1.5rem, 40rem);
+    padding-top: 3rem;
+  }
+
+  .summary p,
+  .status p {
+    font-size: 1rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .action {
+    width: 100%;
+  }
+}
