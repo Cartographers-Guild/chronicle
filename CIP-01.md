@@ -1,6 +1,6 @@
 # CIP-01: Chronicle Node Protocol
 
-This document defines the basic Chronicle node protocol that should be implemented by Chronicle nodes and clients. Later CIPs may extend these structures and flows with additional fields, messages, kinds, and features.
+This document defines the basic protocol that should be implemented by Chronicle nodes and clients. Later CIPs <!--what's a CIP-->may extend these structures and flows with additional fields, messages, kinds, and features.
 
 ## 1. Overview
 
@@ -8,15 +8,15 @@ A Chronicle node exposes an HTTP API and an authenticated realtime stream.
 
 Public routes:
 
-* `GET /info`
-* `POST /handshake`
+- `GET /info`
+- `POST /handshake`
 
 Authenticated routes:
 
-* `GET /account`
-* `POST /fund`
-* `POST /publish`
-* `GET /stream`
+- `GET /account`
+- `POST /fund`
+- `POST /publish`
+- `GET /stream`
 
 A typical client flow is:
 
@@ -30,10 +30,10 @@ Finally, the node publishes accepted events in anchored batch artifacts under `/
 
 Unless otherwise specified:
 
-* all timestamps are Unix timestamps in milliseconds;
-* all monetary amounts are denominated in millisatoshis (`msats`);
-* all pubkeys, event ids, transaction ids, hashes, and signatures are lowercase hex;
-* all cryptographic hashes, signatures, and byte concatenations operate on raw bytes, not on hex strings.
+- all timestamps are Unix timestamps in milliseconds;
+- all monetary amounts are denominated in millisatoshis (`msats`);
+- all pubkeys, event ids, transaction ids, hashes, and signatures are lowercase hex;
+- all cryptographic hashes, signatures, and byte concatenations operate on raw bytes, not on hex strings.
 
 When this document refers to JSON serialization, it means the compact UTF-8 JSON serialization of the specified value, with no extra whitespace or line breaks.
 
@@ -41,18 +41,18 @@ When this document refers to JSON serialization, it means the compact UTF-8 JSON
 
 The only client-submitted protocol object is the orientation event.
 
-On the wire, an orientation event is encoded as:
+On the wire,<!--this may be a well-known way of saying this in the btc community but I found it confusing--> an orientation event is encoded as:
 
 ```
 [kind, subject, amount, pubkey, created_at, sig]
 ```
 
-* `kind` is a canonical namespaced string identifying how `subject` is interpreted.
-* `subject` is a kind-specific canonical identifier string.
-* `amount` is a non-zero signed integer amount in millisatoshis.
-* `pubkey` is the signer’s x-only secp256k1 public key, encoded as exactly 64 lowercase hex characters.
-* `created_at` is a Unix timestamp in milliseconds.
-* `sig` is a BIP340 Schnorr signature, encoded as exactly 128 lowercase hex characters.
+- `kind` is a canonical namespaced string identifying how `subject` is interpreted.<!--was curious why "kind" and not "type"-->
+- `subject` is a kind-specific canonical identifier string.
+- `amount` is a non-zero signed integer amount in millisatoshis.
+- `pubkey` is the signer’s x-only secp256k1 public key, encoded as exactly 64 lowercase hex characters.
+- `created_at` is a Unix timestamp in milliseconds.
+- `sig` is a BIP340 Schnorr signature<!--I went down a rabbit hole reading about elliptic curve multiplication which was fun-->, encoded as exactly 128 lowercase hex characters.
 
 To obtain the event id, the client and node compute the SHA-256 of the compact UTF-8 JSON serialization of the following unsigned event payload:
 
@@ -60,9 +60,9 @@ To obtain the event id, the client and node compute the SHA-256 of the compact U
 [kind, subject, amount, pubkey, created_at]
 ```
 
-The signature `sig` is a BIP340 Schnorr signature over the 32-byte event id. 
+The signature `sig` is a BIP340 Schnorr signature over the 32-byte event id.
 
-Nodes that support a kind MUST validate `subject` against that kind’s canonical form and reject invalid subjects. The initial kind registry is defined in Appendix A.
+Nodes that support a kind MUST<!--on this occasion I learned about RFC 2119 notation standards--> validate `subject` against that kind’s canonical form and reject invalid subjects. The initial kind registry is defined in Appendix A.
 
 ## 4. Node info
 
@@ -94,9 +94,9 @@ Success response:
 }
 ```
 
-Nodes MUST support the `account` stream and MUST NOT charge for it.
+Nodes MUST support the `account` stream and MUST NOT charge for it.<!--why is this bit here under /info? Should this be a separate small overview section? Or at least higher up, put the details about /info at the end of this section. Or separate them from each other somehow?-->
 
-`fund`, `publish`, and `stream` MAY include additional node policy fields. Unknown fields MUST be ignored by clients.
+`fund`, `publish`, and `stream` MAY include additional node policy fields. Unknown fields MUST be ignored by clients. <!--how does a client know which fields are additional node policy fields to consume, and which ones to ignore?-->
 
 The full `GET /info` response shape is specified in Appendix C.
 
@@ -104,10 +104,10 @@ The full `GET /info` response shape is specified in Appendix C.
 
 Authentication is required for:
 
-* `GET /account`
-* `POST /fund`
-* `POST /publish`
-* `GET /stream`
+- `GET /account`
+- `POST /fund`
+- `POST /publish`
+- `GET /stream`
 
 An authenticated account is a node-local paying account identified by `pubkey`. Funding is credited to that account, and that account is charged for accepted events.
 
@@ -115,11 +115,11 @@ The event `pubkey` identifies the signer of the orientation event and may differ
 
 Authentication uses a mutual handshake. The client proves control of its account pubkey, and the node proves control of the pubkey it advertised in `GET /info`.
 
-The client sends a signed handshake request to `POST /handshake`. If the node accepts the proposed handshake, it returns a bearer token and its own signature over the same handshake payload. Otherwise it rejects the request. 
+The client sends a signed handshake request to `POST /handshake`. If the node accepts the proposed handshake, it returns a bearer token and its own signature over the same handshake payload. Otherwise it rejects the request.
 
 Authenticated HTTP requests use `Authorization: Bearer <token>`. WebSocket authentication uses the same token in the `token` query parameter: `GET /stream?token=<token>`
 
-`scope` is either `read` or `write`. `read` permits account reads and realtime streams. A node MAY charge for some read operations such as optional streams. `write` also permits event publication and other write operations that consume account balance.
+`scope` is either `read` or `write`. `read` permits account reads and realtime streams. A node MAY charge for some read operations such as optional streams. `write` also permits event publication and other write operations that consume account balance. <!--does having w mean you also have r?-->
 
 ### `POST /handshake`
 
@@ -139,7 +139,7 @@ Request:
 }
 ```
 
-`pubkey` identifies the client account pubkey against which the client signature is verified. `handshake.node` MUST match the node pubkey advertised in `GET /info`. 
+`pubkey` identifies the client account pubkey against which the client signature is verified. `handshake.node` MUST match the node pubkey advertised in `GET /info`.
 
 Both client and node signatures are BIP340 Schnorr signatures over the 32-byte SHA-256 of the handshake payload. The handshake payload is the compact UTF-8 JSON serialization of:
 
@@ -156,7 +156,7 @@ Success response:
 }
 ```
 
-The token is an opaque bearer token bound by the node to exactly one account, one scope, and one expiry, which it inherits from the accepted handshake. 
+The token is an opaque bearer token bound by the node to exactly one account, one scope, and one expiry, which it inherits from the accepted handshake.
 
 The node MAY reject a handshake whose `created_at` or `expires_at` violates node policy.
 
@@ -217,7 +217,7 @@ Request:
 }
 ```
 
-`method` identifies the funding method. This document defines `lightning` and `bitcoin`. Additional funding methods may be defined elsewhere. 
+`method` identifies the funding method. This document defines `lightning` and `bitcoin`. Additional funding methods may be defined elsewhere.
 
 `amount` is the requested funding amount in the units specified by `units`.
 For lightning, units MUST be `msats`. For bitcoin, units MUST be `sats`.
@@ -256,6 +256,8 @@ For `bitcoin`, if the observed amount differs from `requested_amount`, a node MA
 
 `expires_at` defines the time after which the node is no longer required to honor the funding instruction.
 
+<!--is there a way to take money back out of the account? Or is the point of this flow only to be a precursor step to publishing, and the balance isn't going to hang around for long?-->
+
 ## 8. Publishing
 
 `POST /publish` submits a signed orientation event to the node for acceptance and later publication.
@@ -272,11 +274,11 @@ The event `pubkey` identifies the signer of the event and MAY differ from the au
 
 The node accepts the event only if:
 
-* the event is well-formed
-* the event signature is valid
-* the event amount and timestamp satisfy node policy
-* the authenticated account has sufficient balance
-* the event is not a duplicate
+- the event is well-formed
+- the event signature is valid
+- the event amount and timestamp satisfy node policy
+- the authenticated account has sufficient balance
+- the event is not a duplicate
 
 A duplicate publish MUST be detected by event id and MUST NOT create a second charge.
 
@@ -296,6 +298,8 @@ Success response:
 }
 ```
 
+  <!--is this ^ making it clear enough that it's always a positive amount?-->
+
 `receipt` is the node’s BIP340 Schnorr signature over the 32-byte `event_id`.
 
 ## 9. Realtime stream
@@ -307,14 +311,16 @@ GET /stream?token=<token>&streams=event,batch,account
 ```
 
 If `streams` is omitted, the node subscribes the client to `account` only.
- 
+
 This document defines the following streams:
 
-* `event`, which emits accepted events and their receipt.
-* `batch`, which emits published batch announcements.
-* `account`, which emits authenticated account activity.
+- `event`, which emits accepted events and their receipt.
+- `batch`, which emits published batch announcements.
+- `account`, which emits authenticated account activity.
 
 Nodes MUST support the `account` stream. Nodes MAY additionally support the `event` and `batch` streams.
+
+<!--isn't this a duplication/repetition of the bit above for the GET /info where I also commented? Maybe that should just live here-->
 
 ### `event`
 
@@ -381,6 +387,8 @@ Activity object for `publish`:
 
 If the client is subscribed to `account`, the node MUST emit a `publish` activity when an event charge is applied.
 
+<!--could you split them into sub-sections under Account? i. fund ii. publish-->
+
 ## 10. Publication
 
 `/published/...` is a public static publication directory, not a REST API. Accepted events are batched deterministically, anchored to Bitcoin, and published there as batch artifacts.
@@ -399,11 +407,11 @@ A published batch artifact has the form:
 }
 ```
 
-Events in a batch are ordered by `created_at` ascending, with `event_id` as the tie-breaker in lexical order.
+Events in a batch are ordered by `created_at` ascending, with `event_id` as the tie-breaker in lexical<!--I prefer "lexicographical" but I understood--> order.
 
 For each event, the node computes `event_id` as defined in Section 3.
 
-The node builds a Merkle tree over the ordered raw 32-byte event ids. Each leaf is one raw 32-byte `event_id`. Each parent node is `sha256(left || right)` over raw bytes. If a Merkle tree level has an odd number of nodes, the final node is duplicated.
+The node builds a Merkle tree <!--the robot suggests there's an edge case if the number of nodes is odd, not sure if this is relevant-->over the ordered raw 32-byte event ids. Each leaf is one raw 32-byte `event_id`. Each parent node is `sha256(left || right)` over raw bytes. If a Merkle tree level has an odd number of nodes, the final node is duplicated.
 
 The resulting Merkle root is `events_root`.
 
@@ -415,13 +423,13 @@ root = sha256(events_root || node_pubkey)
 
 where `node_pubkey` is the raw 32-byte x-only public key advertised by the node.
 
-The anchor output is the transaction output identified by `txid` and `vout`. It MUST be an `OP_RETURN` output whose pushed data is the raw 32-byte `root`, and whose output value is at least the required burn in satoshis.
+The anchor output is the transaction output identified by `txid` and `vout`. It MUST be an `OP_RETURN`<!--burn it baby--> output whose pushed data is the raw 32-byte `root`, and whose output value is at least the required burn in satoshis.
 
 A batch is valid only if:
 
-* the batch ordering is correct
-* the `root` is correctly derived from the ordered events and the node pubkey
-* the anchor output destroys at least `ceil(sum(abs(amount)) / 1000)` satoshis
+- the batch ordering is correct
+- the `root` is correctly derived from the ordered events and the node pubkey
+- the anchor output destroys at least `ceil(sum(abs(amount)) / 1000)` satoshis
 
 `/published/index.json` lists published batches newest first. It has the form:
 
@@ -441,7 +449,7 @@ A batch is valid only if:
 
 Published batch artifacts are public. Anyone may download them and verify the batch ordering, Merkle root, batch root, and Bitcoin anchor.
 
-***
+---
 
 # Appendix
 
@@ -449,7 +457,7 @@ The appendices collect the parts of the protocol that are useful for implementat
 
 ## A. Kind registry and subject validation
 
-`subject` identifies the subject of an orientation event, such as a public key, domain, URL, email address, or transaction id. 
+`subject` identifies the subject of an orientation event, such as a public key, domain, URL, email address, or transaction id.
 
 `subject` MUST be a canonical identifier string for the event `kind`. It is not a freeform content field.
 
@@ -465,22 +473,22 @@ Where a kind below refers to an event id, transaction id, or SHA-256 digest, `su
 
 The following initial kind registry is proposed:
 
-* `chronicle:event`: `subject` is a Chronicle event id.
-* `chronicle:node`: `subject` is a public key identifying a Chronicle node.
-* `pubkey`: `subject` is a public key.
-* `nostr:pubkey`: `subject` is a public key identifying a Nostr account.
-* `nostr:event`: `subject` is a Nostr event id.
-* `nostr:relay`: `subject` is a canonical relay URL.
-* `web:domain`: `subject` is a normalized lowercase ASCII domain name, without scheme, path, query, fragment, or port.
-* `web:url`: `subject` is a canonical absolute URL.
-* `email:address`: `subject` is a normalized email address.
-* `phone:number`: `subject` is a normalized `+`-prefixed digits-only telephone number.
-* `bitcoin:txid`: `subject` is a Bitcoin transaction id.
-* `content:sha256`: `subject` is a SHA-256 digest of external content.
+- `chronicle:event`: `subject` is a Chronicle event id.
+- `chronicle:node`: `subject` is a public key identifying a Chronicle node.
+- `pubkey`: `subject` is a public key.
+- `nostr:pubkey`: `subject` is a public key identifying a Nostr account.
+- `nostr:event`: `subject` is a Nostr event id.
+- `nostr:relay`: `subject` is a canonical relay URL.
+- `web:domain`: `subject` is a normalized lowercase ASCII domain name, without scheme, path, query, fragment, or port.
+- `web:url`: `subject` is a canonical absolute URL.<!--what is a canonical absolute URL? `example.com/path` resolves to the same as `example.com/path?`-->
+- `email:address`: `subject` is a normalized email address.<!--as above, I guess you're saying this is up for the nodes to define?-->
+- `phone:number`: `subject` is a normalized `+`-prefixed digits-only telephone number.
+- `bitcoin:txid`: `subject` is a Bitcoin transaction id.
+- `content:sha256`: `subject` is a SHA-256 digest of external content.
 
 Nodes SHOULD reject non-canonical encodings even when they identify the same underlying subject.
 
-Kinds defined by this document identify external subjects or compact cryptographic references. They do not embed the underlying content.
+Kinds defined by this document identify external subjects or compact cryptographic references. They do not embed the underlying content.<!--I didn't understand what this means-->
 
 ## B. Third-party funding and internal transfer
 
@@ -513,9 +521,9 @@ Response:
 }
 ```
 
-The initiating account receives `fund` activity objects on the `account` stream as described in the realtime stream section. The credited account SHOULD receive the `settled` `fund` activity, because its balance has changed.
+The initiating account receives `fund` activity objects on the `account` stream as described in the realtime stream section. The credited account SHOULD receive the `settled` `fund` activity, because its balance has changed.<!--why not MUST-->
 
-A node MAY also support internal account-to-account transfer.
+A node MAY also support internal account-to-account transfer.<!--how does it work across nodes?-->
 
 If `GET /info` includes `"internal_transfer": true` under `fund`, the node supports internal transfer. An internal transfer moves balance from the authenticated account to another existing account on the same node.
 
@@ -554,7 +562,7 @@ If the client is subscribed to the `account` stream, the node MUST emit the corr
 
 ## C. Stream policy, billing, and full `/info` response
 
-Nodes MUST support the `account` stream and MUST NOT charge for it. Nodes MAY additionally support the `event` and `batch` streams.
+Nodes MUST support the `account` stream and MUST NOT charge for it.<!--third mention of this, so maybe it's intentional that you bring it up so much?--> Nodes MAY additionally support the `event` and `batch` streams.
 
 Paid stream access is granted per authenticated account, per stream, for a bounded period. Reconnection or additional connections during an active paid period MUST NOT create an additional charge for the same account and stream.
 
@@ -637,7 +645,7 @@ The full `GET /info` response shape is:
 
 `stream.supported` lists only optional streams beyond `account`.
 
-`fund`, `publish`, and `stream` MAY include additional node policy fields. Unknown fields MUST be ignored by clients.
+`fund`, `publish`, and `stream` MAY include additional node policy fields. Unknown fields MUST be ignored by clients.<!--I read this already didn't I :D-->
 
 ## D. Publication metadata extensions
 
@@ -652,13 +660,14 @@ Section 10 defines the required core fields for each batch entry in `/published/
   "url": "/published/<root>.json"
 }
 ```
+
 A batch entry in `/published/index.json` SHOULD also include:
 
-* `height`, the Bitcoin block height of the anchoring transaction
-* `count`, the number of events in the batch
-* `burn`, the number of satoshis destroyed by the anchor output.
-* `from`, the earliest `created_at` in the batch
-* `to`, the latest `created_at` in the batch
+- `height`, the Bitcoin block height of the anchoring transaction
+- `count`, the number of events in the batch
+- `burn`, the number of satoshis destroyed by the anchor output.
+- `from`, the earliest `created_at` in the batch
+- `to`, the latest `created_at` in the batch
 
 Example:
 
@@ -703,27 +712,27 @@ Example error response:
 
 Recommended authentication error codes:
 
-* `invalid_handshake`
-* `handshake_expired`
-* `invalid_signature`
-* `invalid_token`
+- `invalid_handshake`
+- `handshake_expired`
+- `invalid_signature`
+- `invalid_token`
 
 Recommended funding error codes:
 
-* `unsupported_method`
-* `invalid_amount`
+- `unsupported_method`
+- `invalid_amount`
 
 Recommended publishing error codes:
 
-* `invalid_event`
-* `invalid_signature`
-* `invalid_amount`
-* `insufficient_balance`
-* `duplicate`
-* `unsupported_kind`
-* `timestamp_out_of_range`
+- `invalid_event`
+- `invalid_signature`
+- `invalid_amount`
+- `insufficient_balance`
+- `duplicate`
+- `unsupported_kind`
+- `timestamp_out_of_range`
 
 Recommended stream error codes:
 
-* `invalid_token`
-* `unsupported_stream`
+- `invalid_token`
+- `unsupported_stream`
