@@ -14,7 +14,7 @@ Like Nostr, Chronicle is open and simple at the protocol boundary. Nodes may hav
 
 ## Protocol specification
 
-See [CIP-01: Chronicle Node Protocol](./cips/cip-01.md) for the core node protocol: events, authentication, funding, publishing, streaming, and publication.
+See [CIP-01: Chronicle Node Protocol](./CIP-01.md) for the core node protocol: events, authentication, funding, publishing, streaming, and publication.
   
 
 Kind specs are defined in the `registry/`. The initial set includes:
