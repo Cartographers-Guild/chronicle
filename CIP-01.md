@@ -1,4 +1,5 @@
-# CIP-01: Chronicle Node Protocol
+CIP-01: Chronicle Node Protocol
+===============================
 
 This document defines the basic Chronicle node protocol that should be implemented by Chronicle nodes and clients. Later CIPs may extend these structures and flows with additional fields, messages, kinds, and features.
 
@@ -37,9 +38,13 @@ Unless otherwise specified:
 
 When this document refers to JSON serialization, it means the compact UTF-8 JSON serialization of the specified value, with no extra whitespace or line breaks.
 
+Nodes intended for browser-based clients SHOULD support CORS on all HTTP routes defined by this document. At minimum, they SHOULD allow `GET`, `POST`, and `OPTIONS`, and the `Content-Type` and `Authorization` headers. This recommendation applies only to HTTP routes. WebSocket connections are governed separately by the node’s origin policy.
+
 ## 3. Events
 
 The only client-submitted protocol object is the orientation event.
+
+`kind` identifies how the event’s `subject` is interpreted. For example, an event with kind `web:domain` and subject `example.com` is an orientation event about the domain `example.com`.
 
 On the wire, an orientation event is encoded as:
 
@@ -49,7 +54,7 @@ On the wire, an orientation event is encoded as:
 
 * `kind` is a canonical namespaced string identifying how `subject` is interpreted.
 * `subject` is a kind-specific canonical identifier string.
-* `amount` is a non-zero signed integer amount in millisatoshis.
+* `amount` is a non-zero signed integer amount in millisatoshis. Its sign encodes directional orientation.
 * `pubkey` is the signer’s x-only secp256k1 public key, encoded as exactly 64 lowercase hex characters.
 * `created_at` is a Unix timestamp in milliseconds.
 * `sig` is a BIP340 Schnorr signature, encoded as exactly 128 lowercase hex characters.
@@ -62,64 +67,40 @@ To obtain the event id, the client and node compute the SHA-256 of the compact U
 
 The signature `sig` is a BIP340 Schnorr signature over the 32-byte event id. 
 
-Nodes that support a kind MUST validate `subject` against that kind’s canonical form and reject invalid subjects. The initial kind registry is defined in Appendix A.
+Each kind defines the meaning of `subject` and the canonical form it must take. Nodes advertise supported kinds in `GET /info`. Nodes that support a kind MUST validate `subject` according to that kind’s specification and reject invalid subjects.
 
 ## 4. Node info
 
 `GET /info` returns basic node identity and advertised node policy.
 
-Success response:
+Success response, with some fields omitted for brevity:
 
 ```json
 {
   "name": "<node name>",
   "pubkey": "<node-pubkey-hex>",
-  "contact": "<contact-uri>",
   "fund": {
     "methods": [{ "method": "lightning" }, { "method": "bitcoin" }]
   },
   "publish": {
-     "kinds": ["chronicle:event", "chronicle:node", "email:address", "web:domain"],
-    "min_amount": <min publish amount in msats>,
-    "max_amount": <max publish amount in msats>,
-    "max_subject_length": <maximum subject length in characters>,
-    "timestamp_past_skew": <maximum age in milliseconds>,
-    "timestamp_future_skew": <maximum future skew in milliseconds>,
-    "fees": [{ "base": <base fee in msats>, "ppm": <fee rate in parts per million> }]
-  },
-  "stream": {
-    "supported": ["event", "batch"],
-    "fees": [{ "stream": "event", "amount": <amount in msats>, "period": <period in milliseconds> }]
+    "kinds": ["chronicle:event", "web:domain"]
   }
 }
 ```
 
-Nodes MUST support the `account` stream and MUST NOT charge for it.
+`pubkey` identifies the node and is used in the authentication handshake described in Section 5.
 
-`fund`, `publish`, and `stream` MAY include additional node policy fields. Unknown fields MUST be ignored by clients.
+`fund.methods` lists the funding methods supported by the node for topping up the authenticated account balance.
 
-The full `GET /info` response shape is specified in Appendix C.
+`publish.kinds` lists the event kinds accepted by the node.
+
+The full `GET /info` response shape is specified in Appendix B.
 
 ## 5. Authentication
 
-Authentication is required for:
+An authenticated account is a node-local paying account identified by `pubkey`. Funding is credited to that account, and accepted charges are applied to that account. The event `pubkey` identifies the signer of an orientation event and MAY differ from the authenticated account `pubkey`.
 
-* `GET /account`
-* `POST /fund`
-* `POST /publish`
-* `GET /stream`
-
-An authenticated account is a node-local paying account identified by `pubkey`. Funding is credited to that account, and that account is charged for accepted events.
-
-The event `pubkey` identifies the signer of the orientation event and may differ from the authenticated account `pubkey`.
-
-Authentication uses a mutual handshake. The client proves control of its account pubkey, and the node proves control of the pubkey it advertised in `GET /info`.
-
-The client sends a signed handshake request to `POST /handshake`. If the node accepts the proposed handshake, it returns a bearer token and its own signature over the same handshake payload. Otherwise it rejects the request. 
-
-Authenticated HTTP requests use `Authorization: Bearer <token>`. WebSocket authentication uses the same token in the `token` query parameter: `GET /stream?token=<token>`
-
-`scope` is either `read` or `write`. `read` permits account reads and realtime streams. A node MAY charge for some read operations such as optional streams. `write` also permits event publication and other write operations that consume account balance.
+Authentication for the authenticated routes defined by this document uses a mutual handshake. The client proves control of its account pubkey, and the node proves control of the pubkey it advertised in `GET /info`.
 
 ### `POST /handshake`
 
@@ -139,7 +120,7 @@ Request:
 }
 ```
 
-`pubkey` identifies the client account pubkey against which the client signature is verified. `handshake.node` MUST match the node pubkey advertised in `GET /info`. 
+`handshake.node` MUST match the node pubkey advertised in `GET /info`.
 
 Both client and node signatures are BIP340 Schnorr signatures over the 32-byte SHA-256 of the handshake payload. The handshake payload is the compact UTF-8 JSON serialization of:
 
@@ -156,7 +137,11 @@ Success response:
 }
 ```
 
-The token is an opaque bearer token bound by the node to exactly one account, one scope, and one expiry, which it inherits from the accepted handshake. 
+The token is an opaque bearer token bound by the node to exactly one account, one scope, and one expiry, which it inherits from the accepted handshake.
+
+Authenticated HTTP requests use `Authorization: Bearer <token>`. Stream authentication uses the same token in the `token` query parameter: `GET /stream?token=<token>`.
+
+`scope` is either `read` or `write`. `read` permits account reads and realtime streams. A node MAY charge for some read operations such as optional streams. `write` also permits event publication and other write operations that consume account balance.
 
 The node MAY reject a handshake whose `created_at` or `expires_at` violates node policy.
 
@@ -172,7 +157,7 @@ Success response:
 }
 ```
 
-A node MAY also include bounded recent account activity, ordered newest first.
+A node MAY also include recent account activity, ordered newest first.
 
 ```json
 {
@@ -201,11 +186,11 @@ A node MAY also include bounded recent account activity, ordered newest first.
 
 In account activity objects, `amount` is the signed balance delta applied to the authenticated account. For `publish` activity objects, `event_amount` is the absolute value of the event’s signed orientation amount, in millisatoshis.
 
-If a node includes recent account activity in `/account`, that activity is bounded by node policy and is intended only for lightweight UI rendering and recent recovery. It is not a general history API.
+If a node includes recent account activity in `/account`, that activity is bounded by node policy and is intended only for lightweight UI rendering and recent recovery. It is not a general history API. Clients that require long-term recovery or reconciliation SHOULD persist funding references, invoices or addresses, event ids, and receipts rather than relying on `/account` activity retention.
 
 ## 7. Funding
 
-`POST /fund` creates funding instructions for the authenticated account. Optional extensions are described in Appendix B.
+`POST /fund` creates funding instructions for the authenticated account. Optional extensions are described in Appendix C.
 
 Request:
 
@@ -272,31 +257,31 @@ The event `pubkey` identifies the signer of the event and MAY differ from the au
 
 The node accepts the event only if:
 
+* it supports the event kind
 * the event is well-formed
 * the event signature is valid
 * the event amount and timestamp satisfy node policy
 * the authenticated account has sufficient balance
-* the event is not a duplicate
-
-A duplicate publish MUST be detected by event id and MUST NOT create a second charge.
-
+  
 If the event is accepted, the node charges the authenticated account and returns a publish activity object.
 
 Success response:
 
 ```json
 {
-  "type": "publish",
   "event_amount": <integer, absolute value of the event's signed orientation amount, in msats>,
   "fee": <integer, node fee in msats>,
   "amount": <integer, signed balance delta applied to the authenticated account, negative>,
+  "balance": <integer, resulting balance in msats>,
   "created_at": <integer, unix timestamp in milliseconds>,
   "event_id": "<event-id-hex>",
   "receipt": "<node-schnorr-signature-over-event-id>"
 }
 ```
 
-`receipt` is the node’s BIP340 Schnorr signature over the 32-byte `event_id`.
+Duplicate publish requests MUST be detected by event id. If the event id has already been accepted by the node, the node MUST NOT apply a second charge and SHOULD return the original publish activity object.
+
+`receipt` is the node’s BIP340 Schnorr signature over the 32-byte `event_id`. A receipt is the node’s signed acknowledgement that it accepted the event, charged the authenticated account for it, and assumed responsibility for later publication of that event. A receipt proves acceptance by the node. It does not by itself prove that the event was later batched, anchored, or published under `/published/...`.
 
 ## 9. Realtime stream
 
@@ -327,7 +312,9 @@ An `event` message has the form:
 }]
 ```
 
-If a client is subscribed to `event`, the node MUST emit an `event` message when an event is accepted.
+If a client is subscribed to `event`, the node MUST emit an `event` message when an event is accepted. A duplicate publish that does not create a new charge SHOULD NOT emit a second `event` message.
+
+`receipt` has the same meaning as in Section 8.
 
 ### `batch`
 
@@ -362,24 +349,11 @@ A `fund` activity object has the form:
 
 Additional fields depend on `status`. `created` includes `requested_amount` and `requested_units`. `settled` includes `amount` and the resulting `balance`. `expired` adds no additional fields.
 
-If the client is subscribed to `account`, the node MUST emit a fund activity when funding is settled. A node MAY also emit fund activity when funding is created or expired.
+If the client is subscribed to `account`, the node MUST emit a fund activity when funding is settled. A node SHOULD emit fund activity when funding is created, and MAY also emit it when funding is expired.
 
-Activity object for `publish`:
+A `publish` activity object on the account stream has the same fields as the publish activity object returned by `POST /publish`, with the additional `type` field set to `"publish"`.
 
-```json
-{
-  "type": "publish",
-  "event_amount": <integer, absolute value of the event's signed orientation amount, in msats>,
-  "fee": <integer, node fee in msats>,
-  "amount": <integer, signed balance delta applied to the authenticated account, negative>,
-  "balance": <integer, resulting balance in msats>,
-  "created_at": <integer, unix timestamp in milliseconds>,
-  "event_id": "<event-id-hex>",
-  "receipt": "<node-schnorr-signature-over-event-id>"
-}
-```
-
-If the client is subscribed to `account`, the node MUST emit a `publish` activity when an event charge is applied.
+If the client is subscribed to `account`, the node MUST emit a `publish` activity when an event charge is applied. A duplicate publish that does not create a new charge MUST NOT emit a second `publish` activity.
 
 ## 10. Publication
 
@@ -445,44 +419,118 @@ Published batch artifacts are public. Anyone may download them and verify the ba
 
 # Appendix
 
-The appendices collect the parts of the protocol that are useful for implementation and extension but are not required to follow the main protocol flow: the initial kind registry, optional funding and transfer extensions, optional stream billing and the full `/info` response shape, publication metadata extensions, and recommended error codes.
+The appendices collect the parts of the protocol that are useful for implementation and extension but are not required to follow the main protocol flow: subject validation and the external kind registry model, the full `GET /info` response shape, optional funding extensions, optional stream policy and billing, publication metadata extensions, and recommended error codes.
 
 ## A. Kind registry and subject validation
 
-`subject` identifies the subject of an orientation event, such as a public key, domain, URL, email address, or transaction id. 
+Kind definitions and registry management are external to CIP-01. Example kind specifications are published in the Chronicle kind registry, including [chronicle:event](./registry/kinds/chronicle/event/v1.0.0/spec.md), [chronicle:node](./registry/kinds/chronicle/node/v1.0.0/spec.md), and [email:address](./registry/kinds/email/address/v1.0.0/spec.md).
+
+This appendix does not define the kind registry or any kind specifications. It defines only the high-level protocol rules that apply to kind-specific subject validation and discovery.
 
 `subject` MUST be a canonical identifier string for the event `kind`. It is not a freeform content field.
 
-Nodes that support a kind MUST validate `subject` against that kind’s canonical form and reject invalid subjects.
+Each kind specification defines the meaning of `subject`, the canonical form it must take, and any additional validation rules.
+
+Nodes that support a kind MUST validate `subject` according to that kind’s specification and reject invalid subjects.
 
 Nodes MUST enforce a maximum `subject` length. The limit is node policy and SHOULD be advertised in `GET /info`.
 
-This document defines only the specific kind identifiers listed below. Other identifiers in the same namespace are not implied.
+For kinds whose subjects admit multiple textual encodings of the same underlying subject, nodes SHOULD accept only the canonical encoding defined by that kind and reject equivalent alternate encodings.
 
-Where a kind below refers to a public key, `subject` is a lowercase 64-character hex secp256k1 x-only public key.
+Nodes advertise supported kinds in `GET /info`.
 
-Where a kind below refers to an event id, transaction id, or SHA-256 digest, `subject` is lowercase 64-character hex.
+## B. `GET /info` documentation
 
-The following initial kind registry is proposed:
+This appendix documents the full `GET /info` response. Section 4 shows only an abbreviated example.
 
-* `chronicle:event`: `subject` is a Chronicle event id.
-* `chronicle:node`: `subject` is a public key identifying a Chronicle node.
-* `pubkey`: `subject` is a public key.
-* `nostr:pubkey`: `subject` is a public key identifying a Nostr account.
-* `nostr:event`: `subject` is a Nostr event id.
-* `nostr:relay`: `subject` is a canonical relay URL.
-* `web:domain`: `subject` is a normalized lowercase ASCII domain name, without scheme, path, query, fragment, or port.
-* `web:url`: `subject` is a canonical absolute URL.
-* `email:address`: `subject` is a normalized email address.
-* `phone:number`: `subject` is a normalized `+`-prefixed digits-only telephone number.
-* `bitcoin:txid`: `subject` is a Bitcoin transaction id.
-* `content:sha256`: `subject` is a SHA-256 digest of external content.
+### Example response
 
-Nodes SHOULD reject non-canonical encodings even when they identify the same underlying subject.
+```json
+{
+  "name": "example-node",
+  "pubkey": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "contact": "mailto:admin@example.com",
+  "fund": {
+    "methods": [
+      {
+        "method": "lightning",
+        "units": "msats",
+        "min_amount": 1000,
+        "max_amount": 100000000
+      }
+    ]
+  },
+  "publish": {
+    "kinds": [
+      {
+        "kind": "chronicle:event",
+        "spec": "https://chronicle-network.org/registry/kinds/chronicle/event/v1.0.0/spec.md"
+      }
+    ],
+    "min_amount": 1000,
+    "max_amount": 1000000,
+    "max_subject_length": 320,
+    "fees": [
+      {
+        "kind": "*",
+        "base": 100,
+        "ppm": 10000
+      }
+    ],
+    "timestamp_past_skew": 30000,
+    "timestamp_future_skew": 30000
+  },
+  "stream": {
+    "supported": ["event", "batch"],
+    "fees": [
+      {
+        "stream": "event",
+        "amount": 1000,
+        "period": 3600000
+      }
+    ]
+  }
+}
+```
 
-Kinds defined by this document identify external subjects or compact cryptographic references. They do not embed the underlying content.
+### Field descriptions
 
-## B. Third-party funding and internal transfer
+* `name` (`string`, required): Human-readable node name.
+* `pubkey` (`string`, required): Node x-only secp256k1 public key used to verify the node signature returned by `POST /handshake`.
+* `contact` (`string`, required): Administrative contact URI, such as `mailto:` or `https:`.
+* `fund` (`object`, required): Funding policy object.
+* `fund.methods` (`array`, required): Supported funding methods. MUST be non-empty.
+* `fund.methods[].method` (`string`, required): Funding method identifier, such as `lightning` or `bitcoin`.
+* `fund.methods[].units` (`string`, required): Funding units for the method, such as `msats` or `sats`.
+* `fund.methods[].min_amount` (`integer`, optional): Minimum requested funding amount supported by this method.
+* `fund.methods[].max_amount` (`integer`, optional): Maximum requested funding amount supported by this method.
+* `fund.targeted` (`boolean`, optional): Whether the node supports targeted funding as described in Appendix C. If omitted, clients MUST treat it as `false`.
+* `fund.internal_transfer` (`boolean`, optional): Whether the node supports internal account-to-account transfer as described in Appendix C. If omitted, clients MUST treat it as `false`.
+* `publish` (`object`, required): Publish policy object.
+* `publish.kinds` (`array`, required): Supported kind descriptors. MUST be non-empty.
+* `publish.kinds[].kind` (`string`, required): Canonical kind identifier.
+* `publish.kinds[].spec` (`string`, required): Absolute URL or path to the kind specification.
+* `publish.min_amount` (`integer`, optional): Minimum publish amount in msats.
+* `publish.max_amount` (`integer`, optional): Maximum publish amount in msats.
+* `publish.max_subject_length` (`integer`, required): Maximum allowed subject length in characters.
+* `publish.fees` (`array`, required): Publish fee schedule. MUST be non-empty.
+* `publish.fees[].kind` (`string`, required): Kind selector for the fee rule. `*` applies to all kinds not matched more specifically.
+* `publish.fees[].base` (`integer`, required): Fixed publish fee in msats. MUST be a positive non-zero integer.
+* `publish.fees[].ppm` (`integer`, required): Variable publish fee rate in parts per million of the event amount.
+* `publish.timestamp_past_skew` (`integer`, required): Maximum permitted event age in milliseconds.
+* `publish.timestamp_future_skew` (`integer`, required): Maximum permitted future timestamp skew in milliseconds.
+* `stream` (`object`, optional): Optional stream policy object.
+* `stream.supported` (`array`, optional): Optional streams supported by the node beyond `account`.
+* `stream.fees` (`array`, optional): Fee schedule for optional streams. See Appendix D for billing semantics.
+* `stream.fees[].stream` (`string`, required): Optional stream identifier, such as `event` or `batch`.
+* `stream.fees[].amount` (`integer`, required): Stream access charge in msats.
+* `stream.fees[].period` (`integer`, required): Duration of paid access in milliseconds.
+
+The publish fee schedule is part of the node’s signal policy, not merely a revenue mechanism. In particular, a positive non-zero base fee helps prevent fragmentation of orientation across many tiny events.
+
+Clients MUST ignore unknown fields.
+
+## C. Funding extensions
 
 Nodes MAY extend `POST /fund` to support funding accounts other than the authenticated account. This can be used for gifting, delegated funding, or external services that top up Chronicle accounts on behalf of users.
 
@@ -513,7 +561,7 @@ Response:
 }
 ```
 
-The initiating account receives `fund` activity objects on the `account` stream as described in the realtime stream section. The credited account SHOULD receive the `settled` `fund` activity, because its balance has changed.
+The authenticated account MAY receive `fund` activity objects on the `account` stream for the funding instruction it created, as described in Section 9. The credited account SHOULD receive the `settled` `fund` activity, because its balance has changed.
 
 A node MAY also support internal account-to-account transfer.
 
@@ -534,31 +582,34 @@ A node SHOULD reject an internal transfer if the target account equals the authe
 
 A successful internal transfer debits the authenticated account and credits the target account exactly once.
 
-The source account and the target account each receive a `transfer` activity object. `amount` is the signed balance delta applied to the account receiving that message. It is negative for the debited source account and positive for the credited target account. `balance` is the resulting balance of the account receiving that message.
-
-`transfer` activity object:
+Success response:
 
 ```json
 {
-  "type": "transfer",
   "ref": "<transfer-ref>",
   "source_pubkey": "<source account pubkey>",
   "target_pubkey": "<target account pubkey>",
-  "amount": -500000,
-  "balance": 742000,
-  "created_at": 1731088820000
+  "amount":  <integer, signed balance delta applied to the authenticated account, negative>,
+  "balance": <integer, resulting balance in msats>,
+  "created_at":  <integer, unix timestamp in milliseconds>
 }
 ```
 
+A `transfer` activity object on the `account` stream has the same fields, with the additional `type` field set to `"transfer"`.
+
+The source account and the target account each receive a `transfer` activity object on the `account` stream. `amount` is the signed balance delta applied to the account receiving that message. It is negative for the debited source account and positive for the credited target account. `balance` is the resulting balance of the account receiving that message.
+
 If the client is subscribed to the `account` stream, the node MUST emit the corresponding `transfer` activity when the transfer is applied.
 
-## C. Stream policy, billing, and full `/info` response
+## D. Stream policy and billing
+
+This appendix defines the meaning of the `stream.supported` and `stream.fees` fields documented in Appendix B.
 
 Nodes MUST support the `account` stream and MUST NOT charge for it. Nodes MAY additionally support the `event` and `batch` streams.
 
 Paid stream access is granted per authenticated account, per stream, for a bounded period. Reconnection or additional connections during an active paid period MUST NOT create an additional charge for the same account and stream.
 
-If a client requests multiple paid streams, the node charges independently for each stream whose access period is not already active.
+If a client requests multiple paid streams, the node charges independently for each stream whose paid access period is not already active.
 
 If a supported optional stream is omitted from `stream.fees`, it is free. A node MAY include a zero-valued fee entry for explicitness.
 
@@ -577,69 +628,8 @@ A `stream` activity object has the form:
 
 If the client is subscribed to the `account` stream, the node MUST emit a `stream` activity when a stream charge is applied.
 
-The full `GET /info` response shape is:
 
-```json
-{
-  "name": "<node name>",
-  "pubkey": "<node-pubkey-hex>",
-  "contact": "<contact-uri>",
-  "fund": {
-    "methods": [
-      {
-        "method": "lightning",
-        "units": "msats",
-        "min_amount": <minimum funding amount in msats>,
-        "max_amount": <maximum funding amount in msats>
-      },
-      {
-        "method": "bitcoin",
-        "units": "sats",
-        "min_amount": <minimum funding amount in sats>,
-        "max_amount": <maximum funding amount in sats>
-      }
-    ],
-    "targeted": <bool, allow funding another account>,
-    "internal_transfer": <bool, allow internal transfer to another account>
-  },
-  "publish": {
-    "kinds": ["chronicle:event", "chronicle:node", "email:address", "web:domain"],
-    "min_amount": <minimum publish amount in msats>,
-    "max_amount": <maximum publish amount in msats>,
-    "max_subject_length": <maximum subject length in characters>,
-    "fees": [
-      {
-        "kind": "*",
-        "base": <base fee in msats>,
-        "ppm": <fee rate in parts per million>
-      }
-    ],
-    "timestamp_past_skew": <maximum age in milliseconds>,
-    "timestamp_future_skew": <maximum future skew in milliseconds>
-  },
-  "stream": {
-    "supported": ["event", "batch"],
-    "fees": [
-      {
-        "stream": "event",
-        "amount": <amount in msats>,
-        "period": <period in milliseconds>
-      },
-      {
-        "stream": "batch",
-        "amount": <amount in msats>,
-        "period": <period in milliseconds>
-      }
-    ]
-  }
-}
-```
-
-`stream.supported` lists only optional streams beyond `account`.
-
-`fund`, `publish`, and `stream` MAY include additional node policy fields. Unknown fields MUST be ignored by clients.
-
-## D. Publication metadata extensions
+## E. Publication metadata extensions
 
 Section 10 defines the required core fields for each batch entry in `/published/index.json`:
 
@@ -652,6 +642,7 @@ Section 10 defines the required core fields for each batch entry in `/published/
   "url": "/published/<root>.json"
 }
 ```
+
 A batch entry in `/published/index.json` SHOULD also include:
 
 * `height`, the Bitcoin block height of the anchoring transaction
@@ -659,6 +650,8 @@ A batch entry in `/published/index.json` SHOULD also include:
 * `burn`, the number of satoshis destroyed by the anchor output.
 * `from`, the earliest `created_at` in the batch
 * `to`, the latest `created_at` in the batch
+
+These metadata fields MAY also be included in `batch` stream messages. When present, they carry the same meaning.
 
 Example:
 
@@ -682,9 +675,9 @@ Example:
 
 Nodes MAY include additional metadata fields in `index.json`. Unknown fields MUST be ignored by clients.
 
-## E. Errors and policy recommendations
+## F. Errors and policy recommendations
 
-Nodes reject requests that violate this protocol or node policy. Policy values advertised in `GET /info` apply to funding, publishing, and optional streams.
+Nodes reject requests that violate this protocol or node policy. Advertised policy values in `GET /info` apply to funding, publishing, optional funding extensions, and optional streams.
 
 Nodes SHOULD use stable machine-readable error codes so clients can handle errors programmatically.
 
@@ -705,6 +698,7 @@ Recommended authentication error codes:
 
 * `invalid_handshake`
 * `handshake_expired`
+* `invalid_scope`
 * `invalid_signature`
 * `invalid_token`
 
@@ -712,14 +706,22 @@ Recommended funding error codes:
 
 * `unsupported_method`
 * `invalid_amount`
+* `invalid_units`
+
+Recommended funding extension error codes:
+
+* `invalid_account`
+* `self_transfer`
+* `insufficient_balance`
 
 Recommended publishing error codes:
 
 * `invalid_event`
+* `invalid_subject`
+* `subject_too_long`
 * `invalid_signature`
 * `invalid_amount`
 * `insufficient_balance`
-* `duplicate`
 * `unsupported_kind`
 * `timestamp_out_of_range`
 
@@ -727,3 +729,4 @@ Recommended stream error codes:
 
 * `invalid_token`
 * `unsupported_stream`
+* `insufficient_balance`
