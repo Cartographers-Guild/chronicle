@@ -1,7 +1,7 @@
 CIP-01: Chronicle Node Protocol
 ===============================
 
-This document defines the basic Chronicle node protocol that should be implemented by Chronicle nodes and clients. Later CIPs may extend these structures and flows with additional fields, messages, kinds, and features.
+This document defines the basic protocol that should be implemented by Chronicle nodes and clients. Later CIPs may extend these structures and flows with additional fields, messages, kinds, and features.
 
 ## 1. Overview
 
@@ -9,15 +9,15 @@ A Chronicle node exposes an HTTP API and an authenticated realtime stream.
 
 Public routes:
 
-* `GET /info`
-* `POST /handshake`
+- `GET /info`
+- `POST /handshake`
 
 Authenticated routes:
 
-* `GET /account`
-* `POST /fund`
-* `POST /publish`
-* `GET /stream`
+- `GET /account`
+- `POST /fund`
+- `POST /publish`
+- `GET /stream`
 
 A typical client flow is:
 
@@ -31,10 +31,10 @@ Finally, the node publishes accepted events in anchored batch artifacts under `/
 
 Unless otherwise specified:
 
-* all timestamps are Unix timestamps in milliseconds;
-* all monetary amounts are denominated in millisatoshis (`msats`);
-* all pubkeys, event ids, transaction ids, hashes, and signatures are lowercase hex;
-* all cryptographic hashes, signatures, and byte concatenations operate on raw bytes, not on hex strings.
+- all timestamps are Unix timestamps in milliseconds;
+- all monetary amounts are denominated in millisatoshis (`msats`);
+- all pubkeys, event ids, transaction ids, hashes, and signatures are lowercase hex;
+- all cryptographic hashes, signatures, and byte concatenations operate on raw bytes, not on hex strings.
 
 When this document refers to JSON serialization, it means the compact UTF-8 JSON serialization of the specified value, with no extra whitespace or line breaks.
 
@@ -52,12 +52,12 @@ On the wire, an orientation event is encoded as:
 [kind, subject, amount, pubkey, created_at, sig]
 ```
 
-* `kind` is a canonical namespaced string identifying how `subject` is interpreted.
-* `subject` is a kind-specific canonical identifier string.
-* `amount` is a non-zero signed integer amount in millisatoshis. Its sign encodes directional orientation.
-* `pubkey` is the signer’s x-only secp256k1 public key, encoded as exactly 64 lowercase hex characters.
-* `created_at` is a Unix timestamp in milliseconds.
-* `sig` is a BIP340 Schnorr signature, encoded as exactly 128 lowercase hex characters.
+- `kind` is a canonical namespaced string identifying how `subject` is interpreted.
+- `subject` is a kind-specific canonical identifier string.
+- `amount` is a non-zero signed integer amount in millisatoshis. Its sign encodes directional orientation.
+- `pubkey` is the signer’s x-only secp256k1 public key, encoded as exactly 64 lowercase hex characters.
+- `created_at` is a Unix timestamp in milliseconds.
+- `sig` is a BIP340 Schnorr signature, encoded as exactly 128 lowercase hex characters.
 
 To obtain the event id, the client and node compute the SHA-256 of the compact UTF-8 JSON serialization of the following unsigned event payload:
 
@@ -257,11 +257,11 @@ The event `pubkey` identifies the signer of the event and MAY differ from the au
 
 The node accepts the event only if:
 
-* it supports the event kind
-* the event is well-formed
-* the event signature is valid
-* the event amount and timestamp satisfy node policy
-* the authenticated account has sufficient balance
+- it supports the event kind
+- the event is well-formed
+- the event signature is valid
+- the event amount and timestamp satisfy node policy
+- the authenticated account has sufficient balance
   
 If the event is accepted, the node charges the authenticated account and returns a publish activity object.
 
@@ -295,9 +295,9 @@ If `streams` is omitted, the node subscribes the client to `account` only.
  
 This document defines the following streams:
 
-* `event`, which emits accepted events and their receipt.
-* `batch`, which emits published batch announcements.
-* `account`, which emits authenticated account activity.
+- `event`, which emits accepted events and their receipt.
+- `batch`, which emits published batch announcements.
+- `account`, which emits authenticated account activity.
 
 Nodes MUST support the `account` stream. Nodes MAY additionally support the `event` and `batch` streams.
 
@@ -373,7 +373,7 @@ A published batch artifact has the form:
 }
 ```
 
-Events in a batch are ordered by `created_at` ascending, with `event_id` as the tie-breaker in lexical order.
+Events in a batch are ordered by `created_at` ascending, with `event_id` as the tie-breaker in lexicographical order.
 
 For each event, the node computes `event_id` as defined in Section 3.
 
@@ -393,9 +393,9 @@ The anchor output is the transaction output identified by `txid` and `vout`. It 
 
 A batch is valid only if:
 
-* the batch ordering is correct
-* the `root` is correctly derived from the ordered events and the node pubkey
-* the anchor output destroys at least `ceil(sum(abs(amount)) / 1000)` satoshis
+- the batch ordering is correct
+- the `root` is correctly derived from the ordered events and the node pubkey
+- the anchor output destroys at least `ceil(sum(abs(amount)) / 1000)` satoshis
 
 `/published/index.json` lists published batches newest first. It has the form:
 
@@ -419,7 +419,7 @@ Published batch artifacts are public. Anyone may download them and verify the ba
 
 # Appendix
 
-The appendices collect the parts of the protocol that are useful for implementation and extension but are not required to follow the main protocol flow: subject validation and the external kind registry model, the full `GET /info` response shape, optional funding extensions, optional stream policy and billing, publication metadata extensions, and recommended error codes.
+The appendices are separated from the main flow for readability, but they remain part of this specification and are required for correct implementation and extension. They cover subject validation and the external kind registry model, the full `GET /info` response shape, optional funding extensions, optional stream policy and billing, publication metadata extensions, and recommended error codes.
 
 ## A. Kind registry and subject validation
 
@@ -495,36 +495,36 @@ This appendix documents the full `GET /info` response. Section 4 shows only an a
 
 ### Field descriptions
 
-* `name` (`string`, required): Human-readable node name.
-* `pubkey` (`string`, required): Node x-only secp256k1 public key used to verify the node signature returned by `POST /handshake`.
-* `contact` (`string`, required): Administrative contact URI, such as `mailto:` or `https:`.
-* `fund` (`object`, required): Funding policy object.
-* `fund.methods` (`array`, required): Supported funding methods. MUST be non-empty.
-* `fund.methods[].method` (`string`, required): Funding method identifier, such as `lightning` or `bitcoin`.
-* `fund.methods[].units` (`string`, required): Funding units for the method, such as `msats` or `sats`.
-* `fund.methods[].min_amount` (`integer`, optional): Minimum requested funding amount supported by this method.
-* `fund.methods[].max_amount` (`integer`, optional): Maximum requested funding amount supported by this method.
-* `fund.targeted` (`boolean`, optional): Whether the node supports targeted funding as described in Appendix C. If omitted, clients MUST treat it as `false`.
-* `fund.internal_transfer` (`boolean`, optional): Whether the node supports internal account-to-account transfer as described in Appendix C. If omitted, clients MUST treat it as `false`.
-* `publish` (`object`, required): Publish policy object.
-* `publish.kinds` (`array`, required): Supported kind descriptors. MUST be non-empty.
-* `publish.kinds[].kind` (`string`, required): Canonical kind identifier.
-* `publish.kinds[].spec` (`string`, required): Absolute URL or path to the kind specification.
-* `publish.min_amount` (`integer`, optional): Minimum publish amount in msats.
-* `publish.max_amount` (`integer`, optional): Maximum publish amount in msats.
-* `publish.max_subject_length` (`integer`, required): Maximum allowed subject length in characters.
-* `publish.fees` (`array`, required): Publish fee schedule. MUST be non-empty.
-* `publish.fees[].kind` (`string`, required): Kind selector for the fee rule. `*` applies to all kinds not matched more specifically.
-* `publish.fees[].base` (`integer`, required): Fixed publish fee in msats. MUST be a positive non-zero integer.
-* `publish.fees[].ppm` (`integer`, required): Variable publish fee rate in parts per million of the event amount.
-* `publish.timestamp_past_skew` (`integer`, required): Maximum permitted event age in milliseconds.
-* `publish.timestamp_future_skew` (`integer`, required): Maximum permitted future timestamp skew in milliseconds.
-* `stream` (`object`, optional): Optional stream policy object.
-* `stream.supported` (`array`, optional): Optional streams supported by the node beyond `account`.
-* `stream.fees` (`array`, optional): Fee schedule for optional streams. See Appendix D for billing semantics.
-* `stream.fees[].stream` (`string`, required): Optional stream identifier, such as `event` or `batch`.
-* `stream.fees[].amount` (`integer`, required): Stream access charge in msats.
-* `stream.fees[].period` (`integer`, required): Duration of paid access in milliseconds.
+- `name` (`string`, required): Human-readable node name.
+- `pubkey` (`string`, required): Node x-only secp256k1 public key used to verify the node signature returned by `POST /handshake`.
+- `contact` (`string`, required): Administrative contact URI, such as `mailto:` or `https:`.
+- `fund` (`object`, required): Funding policy object.
+- `fund.methods` (`array`, required): Supported funding methods. MUST be non-empty.
+- `fund.methods[].method` (`string`, required): Funding method identifier, such as `lightning` or `bitcoin`.
+- `fund.methods[].units` (`string`, required): Funding units for the method, such as `msats` or `sats`.
+- `fund.methods[].min_amount` (`integer`, optional): Minimum requested funding amount supported by this method.
+- `fund.methods[].max_amount` (`integer`, optional): Maximum requested funding amount supported by this method.
+- `fund.targeted` (`boolean`, optional): Whether the node supports targeted funding as described in Appendix C. If omitted, clients MUST treat it as `false`.
+- `fund.internal_transfer` (`boolean`, optional): Whether the node supports internal account-to-account transfer as described in Appendix C. If omitted, clients MUST treat it as `false`.
+- `publish` (`object`, required): Publish policy object.
+- `publish.kinds` (`array`, required): Supported kind descriptors. MUST be non-empty.
+- `publish.kinds[].kind` (`string`, required): Canonical kind identifier.
+- `publish.kinds[].spec` (`string`, required): Absolute URL or path to the kind specification.
+- `publish.min_amount` (`integer`, optional): Minimum publish amount in msats.
+- `publish.max_amount` (`integer`, optional): Maximum publish amount in msats.
+- `publish.max_subject_length` (`integer`, required): Maximum allowed subject length in characters.
+- `publish.fees` (`array`, required): Publish fee schedule. MUST be non-empty.
+- `publish.fees[].kind` (`string`, required): Kind selector for the fee rule. `*` applies to all kinds not matched more specifically.
+- `publish.fees[].base` (`integer`, required): Fixed publish fee in msats. MUST be a positive non-zero integer.
+- `publish.fees[].ppm` (`integer`, required): Variable publish fee rate in parts per million of the event amount.
+- `publish.timestamp_past_skew` (`integer`, required): Maximum permitted event age in milliseconds.
+- `publish.timestamp_future_skew` (`integer`, required): Maximum permitted future timestamp skew in milliseconds.
+- `stream` (`object`, optional): Optional stream policy object.
+- `stream.supported` (`array`, optional): Optional streams supported by the node beyond `account`.
+- `stream.fees` (`array`, optional): Fee schedule for optional streams. See Appendix D for billing semantics.
+- `stream.fees[].stream` (`string`, required): Optional stream identifier, such as `event` or `batch`.
+- `stream.fees[].amount` (`integer`, required): Stream access charge in msats.
+- `stream.fees[].period` (`integer`, required): Duration of paid access in milliseconds.
 
 The publish fee schedule is part of the node’s signal policy, not merely a revenue mechanism. In particular, a positive non-zero base fee helps prevent fragmentation of orientation across many tiny events.
 
@@ -645,11 +645,11 @@ Section 10 defines the required core fields for each batch entry in `/published/
 
 A batch entry in `/published/index.json` SHOULD also include:
 
-* `height`, the Bitcoin block height of the anchoring transaction
-* `count`, the number of events in the batch
-* `burn`, the number of satoshis destroyed by the anchor output.
-* `from`, the earliest `created_at` in the batch
-* `to`, the latest `created_at` in the batch
+- `height`, the Bitcoin block height of the anchoring transaction
+- `count`, the number of events in the batch
+- `burn`, the number of satoshis destroyed by the anchor output.
+- `from`, the earliest `created_at` in the batch
+- `to`, the latest `created_at` in the batch
 
 These metadata fields MAY also be included in `batch` stream messages. When present, they carry the same meaning.
 
@@ -696,37 +696,37 @@ Example error response:
 
 Recommended authentication error codes:
 
-* `invalid_handshake`
-* `handshake_expired`
-* `invalid_scope`
-* `invalid_signature`
-* `invalid_token`
+- `invalid_handshake`
+- `handshake_expired`
+- `invalid_scope`
+- `invalid_signature`
+- `invalid_token`
 
 Recommended funding error codes:
 
-* `unsupported_method`
-* `invalid_amount`
-* `invalid_units`
+- `unsupported_method`
+- `invalid_amount`
+- `invalid_units`
 
 Recommended funding extension error codes:
 
-* `invalid_account`
-* `self_transfer`
-* `insufficient_balance`
+- `invalid_account`
+- `self_transfer`
+- `insufficient_balance`
 
 Recommended publishing error codes:
 
-* `invalid_event`
-* `invalid_subject`
-* `subject_too_long`
-* `invalid_signature`
-* `invalid_amount`
-* `insufficient_balance`
-* `unsupported_kind`
-* `timestamp_out_of_range`
+- `invalid_event`
+- `invalid_subject`
+- `subject_too_long`
+- `invalid_signature`
+- `invalid_amount`
+- `insufficient_balance`
+- `unsupported_kind`
+- `timestamp_out_of_range`
 
 Recommended stream error codes:
 
-* `invalid_token`
-* `unsupported_stream`
-* `insufficient_balance`
+- `invalid_token`
+- `unsupported_stream`
+- `insufficient_balance`
