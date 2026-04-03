@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}">
+    <meta property="og:title" content="{{title}}">
+    <meta property="og:description" content="{{description}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chronicle-network.org{{canonicalPath}}">
+    <link rel="canonical" href="https://chronicle-network.org{{canonicalPath}}">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="registry-body">
+    <main class="registry-shell">
+      <header class="registry-header">
+        <p class="registry-kicker"><a href="/">Chronicle</a></p>
+        <nav class="registry-breadcrumbs" aria-label="Breadcrumb">
+          {{breadcrumbs}}
+        </nav>
+        <h1>{{heading}}</h1>
+        <p class="registry-subtitle">{{subtitle}}</p>
+      </header>
+      <section class="registry-content">
+        {{content}}
+      </section>
+      <aside class="registry-meta">
+        {{meta}}
+      </aside>
+    </main>
+  </body>
+</html>

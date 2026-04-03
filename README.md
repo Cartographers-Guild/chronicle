@@ -1,6 +1,6 @@
 # Chronicle
 
-An open protocol for costly orientation and trust signaling on the internet.
+An open protocol for public trust and accountability on the web.
 
 Chronicle lets people publish signed orientations backed by publicly verifiable sacrifice. Instead of relying only on cheap likes, ratings, reviews, or platform-local reputation, Chronicle creates a public graph of costly digital action that clients can use to compute trust, reputation, and other signals from shared evidence. The core idea and motivation are laid out in the whitepaper, [Bringing Trust and Accountability to the Web](./public/chronicle.pdf), and the broader philosophical context appears in the essay, [Compass for the Good](https://cartographersguild.substack.com/p/a-compass-for-the-good).
 
@@ -14,10 +14,12 @@ Like Nostr, Chronicle is open and simple at the protocol boundary. Nodes may hav
 
 ## Protocol specification
 
-See [CIP-01: Chronicle Node Protocol](./CIP-01.md) for the core node protocol: events, authentication, funding, publishing, streaming, and publication.
-  
+The current public specification surface includes:
 
-Kind specs are defined in the `registry/`. The initial set includes:
+- [CIP-01: Chronicle Node Protocol](./CIP-01.md) for the core node protocol: events, authentication, funding, publishing, streaming, and publication
+- [`registry/`](./registry/) for canonical kind and type definitions
+
+Current registry kinds include:
 
 - [`chronicle:event`](./registry/kinds/chronicle/event/v1.0.0/spec.md)
 - [`chronicle:node`](./registry/kinds/chronicle/node/v1.0.0/spec.md)
@@ -30,13 +32,27 @@ Kind specs are defined in the `registry/`. The initial set includes:
 - [`web:verify`](./registry/kinds/web/verify/v1.0.0/spec.md)
 - [`phone:number`](./registry/kinds/phone/number/v1.0.0/spec.md)
 - [`phone:verify`](./registry/kinds/phone/verify/v1.0.0/spec.md)
+- [`nostr:event`](./registry/kinds/nostr/event/v1.0.0/spec.md)
+- [`nostr:pubkey`](./registry/kinds/nostr/pubkey/v1.0.0/spec.md)
+- [`nostr:relay`](./registry/kinds/nostr/relay/v1.0.0/spec.md)
+
+Current registry types include:
+
+- [`absolute_url`](./registry/types/absolute_url/v1.0.0/spec.md)
+- [`domain_name`](./registry/types/domain_name/v1.0.0/spec.md)
+- [`email_address`](./registry/types/email_address/v1.0.0/spec.md)
+- [`email_message_fingerprint`](./registry/types/email_message_fingerprint/v1.0.0/spec.md)
+- [`phone_number`](./registry/types/phone_number/v1.0.0/spec.md)
+- [`schnorr_pubkey`](./registry/types/schnorr_pubkey/v1.0.0/spec.md)
+- [`sha256_hex`](./registry/types/sha256_hex/v1.0.0/spec.md)
+- [`websocket_url`](./registry/types/websocket_url/v1.0.0/spec.md)
 
 ## Collaboration
 
-This is an early technical release. The protocol and registry are being developed in public and iterated quickly. Critique, scrutiny, prior art, implementation feedback, and thoughtful collaboration are welcome. Open an issue or pull request if you want to challenge an assumption, propose a refinement, or add a new kind.
+Chronicle is being developed in public. Critique, scrutiny, prior art, implementation feedback, and thoughtful collaboration are welcome. Open an issue or pull request if you want to propose a refinement, suggest a new kind for the registry, point to prior art, or raise a question.
 
 ## Links
 
 - Whitepaper: [Bringing Trust and Accountability to the Web](./public/chronicle.pdf)
-- Essay: [A Compass for the Good](https://cartographersguild.substack.com/p/a-compass-for-the-good)
+- Essay: [Compass for the Good](https://cartographersguild.substack.com/p/a-compass-for-the-good)
 - Website: [chronicle-network.org](https://chronicle-network.org)
