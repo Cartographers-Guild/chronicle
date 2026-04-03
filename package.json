@@ -1,0 +1,27 @@
+{
+  "name": "chronicle-network-org",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "site:validate": "node scripts/validate-registry.mjs",
+    "site:build": "node scripts/build-registry.mjs",
+    "site:dev": "node scripts/dev-registry.mjs",
+    "site:serve": "node scripts/dev-registry.mjs --serve-only",
+    "registry:validate": "npm run site:validate",
+    "registry:build": "npm run site:build",
+    "registry:dev": "npm run site:dev",
+    "registry:serve": "npm run site:serve"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.2",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0",
+    "semver": "^7.6.0"
+  },
+  "devDependencies": {
+    "chokidar": "^3.6.0"
+  }
+}

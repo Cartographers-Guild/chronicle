@@ -6,76 +6,115 @@
     <title>Chronicle</title>
     <meta
       name="description"
-      content="A protocol for costly trust signaling on the internet."
+      content="Chronicle is a protocol for public trust and accountability on the web."
     >
     <meta
       property="og:title"
-      content="Chronicle | Bringing Trust and Accountability to the Web"
+      content="Chronicle | Public Trust and Accountability on the Web"
     >
     <meta
       property="og:description"
-      content="A protocol for costly trust signaling on the internet."
+      content="An open protocol for signed orientations, publicly verifiable sacrifice, and shared trust signals."
     >
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://chronicle-network.org/">
     <meta name="twitter:card" content="summary">
     <meta
       name="twitter:title"
-      content="Chronicle | Bringing Trust and Accountability to the Web"
+      content="Chronicle | Public Trust and Accountability on the Web"
     >
     <meta
       name="twitter:description"
-      content="A protocol for costly trust signaling on the internet."
+      content="An open protocol for signed orientations, publicly verifiable sacrifice, and shared trust signals."
     >
     <link rel="canonical" href="https://chronicle-network.org/">
     <link rel="stylesheet" href="/styles.css">
   </head>
-  <body>
-    <main class="page">
-      <header class="masthead">
+  <body class="home-body">
+    <main class="home-page">
+      <header class="home-header">
+        <div class="home-topbar">
+          <a class="home-brand" href="/">Chronicle</a>
+          <a
+            class="home-github"
+            href="https://github.com/cartographers-guild/chronicle"
+            aria-label="View specs on GitHub"
+            title="View specs on GitHub"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M8 0C3.58 0 0 3.67 0 8.2c0 3.62 2.29 6.69 5.47 7.77.4.08.55-.18.55-.39 0-.19-.01-.83-.01-1.5-2.01.38-2.53-.51-2.69-.98-.09-.24-.48-.98-.82-1.18-.28-.16-.68-.56-.01-.57.63-.01 1.08.59 1.23.84.72 1.24 1.87.89 2.33.68.07-.54.28-.89.5-1.09-1.78-.21-3.64-.92-3.64-4.09 0-.9.31-1.63.82-2.2-.08-.21-.36-1.05.08-2.19 0 0 .67-.22 2.2.84a7.38 7.38 0 0 1 4 0c1.53-1.07 2.2-.84 2.2-.84.44 1.14.16 1.98.08 2.19.51.57.82 1.29.82 2.2 0 3.18-1.87 3.88-3.65 4.09.29.25.54.73.54 1.48 0 1.07-.01 1.94-.01 2.2 0 .21.15.47.55.39A8.21 8.21 0 0 0 16 8.2C16 3.67 12.42 0 8 0Z"
+              />
+            </svg>
+          </a>
+        </div>
 
-        <h1>Chronicle is a protocol for public trust and accountability on the web</h1>
+        <section class="hero">
+          <h1>An open protocol for public trust and accountability on the web</h1>
+          <p class="hero-summary">
+            Chronicle turns costly digital action into a public graph of shared
+            evidence that clients can use to compute trust, reputation, and other
+            signals.
+          </p>
+
+          <nav class="home-docs" aria-label="Primary documentation">
+            <a class="home-doc-link" href="/protocol/cip-01/">
+              <span class="home-doc-title">Protocol specification</span>
+            </a>
+            <a class="home-doc-link" href="/registry/">
+              <span class="home-doc-title">Kind registry</span>
+            </a>
+            <a class="home-doc-link" href="/public/chronicle.pdf">
+              <span class="home-doc-title">Whitepaper</span>
+            </a>
+          </nav>
+
+          <p class="hero-secondary">
+            The broader philosophical framing appears in
+            <a href="https://cartographersguild.substack.com/p/a-compass-for-the-good">Compass for the Good</a>.
+          </p>
+        </section>
       </header>
 
-      <section class="summary">
-  
-          Participants publish signed orientations backed by publicly verifiable
-          sacrifice. Nodes relay, batch, anchor, and publish these events so
-          downstream services can compute trust and reputation from a
-          public graph.
-        </p>
+      <section class="home-section">
+        <div class="section-intro">
+          <h2>How Chronicle works</h2>
+        </div>
+
+        <ol class="home-steps home-steps-compact">
+          <li class="home-step">
+            <strong>A client publishes one of the events from the <a href="/registry/">registry</a></strong>
+            For example, a client can publish an
+            <a href="/registry/kinds/email/verify/v1.0.0/"><code>email:verify</code></a>
+            event for <code>alice@example.com</code> and back it with real
+            sacrifice.
+          </li>
+          <li class="home-step">
+            <strong>A Chronicle node validates, batches, and anchors it</strong>
+            The node validates the event, publishes it off-chain in a batch, and
+            anchors the batch root hash to Bitcoin.
+          </li>
+          <li class="home-step">
+            <strong>Other clients can use that public record</strong>
+            Other clients can use that public record as one input when judging
+            whether future messages from <code>alice@example.com</code> are
+            trustworthy.
+          </li>
+        </ol>
       </section>
 
-      <nav class="actions" aria-label="Primary actions">
-        <a class="action action-primary" href="/public/chronicle.pdf">
-          Read the whitepaper
-        </a>
-        <a
-          class="action"
-          href="https://github.com/cartographers-guild/chronicle"
-        >
-          View source on GitHub
-        </a>
-        <a
-        class="action"
-        href="https://cartographersguild.substack.com/p/a-compass-for-the-good"
-      >
-        Background essay
-      </a>
-      </nav>
-
-      <section class="status">
+      <section class="home-section home-section-note">
         <p class="note">
-          This is an early technical release. Critique, scrutiny, and thoughtful
-          collaboration are welcome. Open an issue on  <a href="https://github.com/cartographers-guild/chronicle">GitHub</a> for questions, objections, prior art, or implementation critiques.
-        </p>
-        <p class="contact">
-          Contact: <a href="mailto:luka@lukadover.com">luka@lukadover.com</a>
+          Chronicle is being developed in public. Open an issue on
+          <a href="https://github.com/cartographers-guild/chronicle/issues">GitHub</a>
+          if you want to propose a refinement, suggest a new kind for the
+          registry, point to prior art, or raise a question.
         </p>
       </section>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer home-footer">
       <p>
         <span>&copy; Chronicle 2026</span>
         <span>Released under the MIT License</span>
