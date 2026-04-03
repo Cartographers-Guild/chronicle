@@ -25,6 +25,11 @@ Kind specs are defined in the `registry/`. The initial set includes:
 - [`email:address`](./registry/kinds/email/address/v1.0.0/spec.md)
 - [`email:message`](./registry/kinds/email/message/v1.0.0/spec.md)
 - [`email:verify`](./registry/kinds/email/verify/v1.0.0/spec.md)
+- [`web:domain`](./registry/kinds/web/domain/v1.0.0/spec.md)
+- [`web:url`](./registry/kinds/web/url/v1.0.0/spec.md)
+- [`web:verify`](./registry/kinds/web/verify/v1.0.0/spec.md)
+- [`phone:number`](./registry/kinds/phone/number/v1.0.0/spec.md)
+- [`phone:verify`](./registry/kinds/phone/verify/v1.0.0/spec.md)
 
 ## Collaboration
 
