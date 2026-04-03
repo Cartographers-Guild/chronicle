@@ -1,4 +1,3 @@
-
 # `email:address`
 
 ## Summary
@@ -11,7 +10,7 @@
 
 ## Motivation
 
-Email inboxes are a canonical spam problem. `email:address` lets clients accumulate a public signal around whether a given address has been useful, trustworthy, spammy, misleading, or abusive.
+Email inboxes are a canonical spam problem. `email:address` makes it possible to judge whether a given address has been useful, trustworthy, spammy, misleading, or abusive.
 
 Clients may orient negatively toward spammy or abusive addresses, and positively toward addresses that have proven useful or that have been publicly backed by credible senders.
 
