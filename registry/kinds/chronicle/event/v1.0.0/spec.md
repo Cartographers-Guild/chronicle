@@ -6,7 +6,7 @@
 
 ## Subject
 
-`subject` MUST be of type [`sha256_hex`](../../../types/sha256_hex/v1.0.0/spec.md).
+`subject` MUST be of type [`sha256_hex`](../../../../types/sha256_hex/v1.0.0/spec.md).
 
 In Chronicle, this is the event id defined by `CIP-01` for the unsigned event payload.
 

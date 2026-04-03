@@ -10,6 +10,7 @@ A `domain_name` value MUST:
 
 - be entirely lowercase ASCII
 - consist of one or more labels separated by `.`
+- contain at least one `.`
 - contain only lowercase ASCII letters, digits, `-`, and `.`
 - not begin or end with `.`
 - not contain consecutive dots
