@@ -60,14 +60,15 @@
 \maketitle
 
 \begin{abstract}
-The internet lacks a general public signal of trust. Existing signals such as likes, reviews, follows, and platform-local reputation are useful, but they are cheap to produce, easy to manipulate, fragmented across platforms, and often centrally controlled. We propose a protocol for costly public orientation on the web. Participants publish signed orientations toward or away from arbitrary subjects, expressed through publicly verifiable sacrifice. Nodes accept these events, relay them in real time, group them into batches, compute a Merkle root for each batch, and anchor that root to Bitcoin. After anchoring, nodes publish the full batch data off chain, allowing anyone to verify the anchor and reconstruct the public record. From this published data, downstream services can estimate trust profiles, derive subject scores, and compute actor reputation. Nodes do not need global coordination, and they do not need to provide full query interfaces. Their role is simply to accept valid events, anchor batch roots, and publish the corresponding batch data. We present the protocol structure and outline a baseline method for computing trust and reputation from the resulting public record.
+The internet lacks a general public signal of trust. Existing signals such as likes, reviews, follows, and platform-local reputation are useful, but they are cheap to produce, easy to manipulate, fragmented across platforms, and often centrally controlled. We propose a protocol for costly public orientation on the web. Participants publish signed orientations toward or away from arbitrary subjects, expressed through publicly verifiable sacrifice. Nodes accept these events, relay them in real time, group them into batches, compute a Merkle root for each batch, and anchor that root to Bitcoin. After anchoring, nodes publish the full batch data off chain, allowing anyone to verify the anchor and reconstruct the public record. From this published data, downstream services can compute actor reputation and subject trust profiles using signed PageRank-style methods. Nodes do not need global coordination, and they do not need to provide full query interfaces. Their role is simply to accept valid events, anchor batch roots, and publish the corresponding batch data. We present the protocol structure and outline a reference signed PageRank algorithm for computing reputation and trust from the resulting public record.
+
 \end{abstract}
 
 \section{Introduction}
 
 Interactions on the internet constantly depend on trust judgments. A user deciding whether to click a link, open an email, rely on a seller, follow an account, or use a service is always making some estimate of likely outcomes. Existing trust mechanisms such as reviews, ratings, follows, and platform-local reputation work well enough in many cases, but they remain cheap to produce, easy to manipulate, fragmented across platforms, and often centrally controlled. As a result, trust online remains local, weak, and easy to manipulate. A malicious website can appear legitimate, a spam sender can appear authentic, and a product can accumulate fake reviews that are difficult to distinguish from real ones. There is no widely adopted general-purpose internet protocol for signaling trust in a way that is portable, public, and accountable.
 
-What is needed is a network for coordinating and aggregating distributed trust signals into a shared public map, allowing browsers, email clients, marketplaces, and social platforms to filter noise, surface substance, and respond more quickly to abuse. In this paper we propose a protocol that makes trust signaling costly, public, and portable. Instead of relying on cheap expression alone, it allows participants to publish signed orientation events toward or away from arbitrary subjects, backed by irreversible and provable sacrifice. Nodes accept these events, relay them, batch them, and anchor commitments to Bitcoin. From the resulting public data, downstream services can estimate trust profiles, derive subject scores, and compute actor reputation. The effect is to make manipulation more expensive, trust more portable, and collective response easier, so that public trust maps can emerge from the costly orientations of many participants.
+What is needed is a network for coordinating and aggregating distributed trust signals into a shared public map, allowing browsers, email clients, marketplaces, and social platforms to filter noise, surface substance, and respond more quickly to abuse. In this paper we propose a protocol that makes trust signaling costly, public, and portable. Instead of relying on cheap expression alone, it allows participants to publish signed orientation events toward or away from arbitrary subjects, backed by irreversible and provable sacrifice. Nodes accept these events, relay them, batch them, and anchor commitments to Bitcoin. From the resulting public graph, downstream services can compute actor reputation using a signed PageRank-style algorithm and derive subject trust profiles from reputation-weighted orientations. The effect is to make manipulation more expensive, trust more portable, and collective response easier, so that public trust maps can emerge from the costly orientations of many participants.
 
 \section{Trust}
 
@@ -161,7 +162,7 @@ The solution starts with the concept of a costly orientation event: a signed sig
 
 \[
 \texttt{event} =
-[\texttt{subject},\ \texttt{signed\_amount},\ \texttt{pubkey},\ \texttt{timestamp},\ \texttt{sig}]
+[\texttt{kind},\ \texttt{subject},\ \texttt{amount},\ \texttt{pubkey},\ \texttt{created\_at},\ \texttt{sig}]
 \]
 
 A positive amount orients toward the subject. A negative amount orients away from it. The signature proves that the event was created by the holder of the corresponding public key.
@@ -169,13 +170,13 @@ A positive amount orients toward the subject. A negative amount orients away fro
 For example:
 
 \[
-\texttt{["scam.shop", -100, user\_pubkey, timestamp, sig]}
+\texttt{["web:domain", "scam.shop", -100, user\_pubkey, created\_at, sig]}
 \]
 \[
-\texttt{["example.com", +50, user\_pubkey, timestamp, sig]}
+\texttt{["web:domain", "example.com", +50, user\_pubkey, created\_at, sig]}
 \]
 
-A subject may be any protocol-defined identifier or entity. Subjects can include domains, URLs, pubkeys, nodes, user accounts, or prior orientation events. This allows the same primitive to represent first-order trust judgments, direct judgments about actors or infrastructure, and later acknowledgment of whether a prior orientation proved useful.
+A subject may be any protocol-defined identifier or entity. Subjects can include domains, URLs, pubkeys, nodes, user accounts, or prior orientation events. This allows the same primitive to represent first-order trust judgments, direct judgments about actors or infrastructure, and later acknowledgment of whether a prior orientation proved useful. Because subjects may include actors and prior events, the public record forms an explicit orientation graph rather than a flat list of ratings.
 
 \section{Nodes}
 
@@ -258,11 +259,11 @@ The incentives of the system are therefore recursive. Nodes are rewarded for ope
 
 \section{Computing Trust}
 
-Services that compute trust lie outside the strict protocol boundary. The protocol itself publishes a public graph of costly orientations; downstream services interpret that graph and derive useful signals from it. Different services may use different algorithms, and those algorithms will evolve over time. Their design nonetheless matters, because it shapes how the protocol is used, how influence accumulates, and how the public record is interpreted. For example, an algorithm that rewards orientations toward prior events creates an incentive to publish explicit usefulness judgments about earlier signals. For that reason we outline a baseline trust-computation algorithm.
+Services that compute trust lie outside the strict protocol boundary. The protocol publishes a public graph of costly orientations; downstream services interpret that graph and derive useful signals from it. Different services may use different algorithms, and those algorithms will evolve over time. Their design nonetheless matters, because it shapes how influence accumulates and how the public record is interpreted.
 
 Published orientation data is useful even in the simplest case. A first estimate of trust can be obtained by aggregating net signed sacrifice toward a subject. If many participants independently orient away from a domain, the resulting trust profile shifts negative. If many orient toward it, the profile shifts positive. Even this simple approach already produces a stronger public signal than systems based on costless ratings or reviews.
 
-A better algorithm, however, should not treat every source equally. Some actors prove more useful than others. An orientation made by a participant whose prior signals repeatedly helped others avoid harm or find value should count more than an orientation made by an unknown or consistently misleading actor. Raw trust profiles should therefore be weighted by reputation. Wealth can buy signal magnitude, but it should not automatically buy influence over the map, because influence should depend on an actor's public record of producing useful orientations.
+A better algorithm, however, should not treat every source equally. Some actors prove more useful than others. An orientation made by an actor whose prior signals repeatedly helped others avoid harm or find value should count more than an orientation made by an unknown or consistently misleading actor. Raw trust profiles should therefore be weighted by reputation.
 
 \begin{figure}[htbp]
 \centering
@@ -322,15 +323,15 @@ A better algorithm, however, should not treat every source equally. Some actors 
 \caption{The same raw sacrifice can imply a different trust profile once source reputation is taken into account.}
 \end{figure}
 
-This makes trust computation recursive. A subject's score depends on the costly orientations pointed toward it, weighted by the reputations of the actors who made them. An actor's reputation depends in part on whether that actor's prior orientations later proved useful. That usefulness becomes visible because orientation events can themselves become subjects of later orientation. A participant who benefits from a prior signal can orient toward that specific event, making its usefulness explicit rather than leaving it to be inferred indirectly.
+This makes trust computation recursive. A subject's score depends on the costly orientations pointed toward it, weighted by the reputations of the actors who made them. An actor's reputation depends on the public graph of orientations toward that actor and toward the actor's prior events. A useful warning can therefore strengthen the reputation of the actor who made it, while a misleading endorsement can weaken it.
 
-Our baseline proposal computes three linked quantities: a subject score \(Q\), an actor reputation \(R\), and an event usefulness score \(U\). The full update equations are given in the appendix.
+The reference algorithm in the appendix adapts PageRank \cite{page1999pagerank} to this signed orientation graph. In PageRank, links route importance between pages. In the reference algorithm, costly orientations route influence between actors. Positive inbound sacrifice supplies the external rank source, signed actor orientations form the influence matrix, and subject scores are computed afterward from reputation-weighted orientations.
 
-The intuition is similar to PageRank \cite{page1999pagerank}. PageRank showed that importance can be extracted recursively from a web of links. Here the same general idea is applied to a different object: a public graph of signed costly orientations. Orientation events are explicit, directional, and backed by sacrifice. They can point toward or away from arbitrary subjects such as domains, accounts, public keys, email addresses, phone numbers, or prior orientation events.
+The distinction is important. Subjects such as domains, URLs, email addresses, and phone numbers receive trust scores, but they do not recursively distribute influence. Actors do. In this sense, Chronicle creates an explicit public graph in which participants continuously determine how influence should be distributed over trust maps of subjects.
 
-That contrast matters. Early Google succeeded because the web’s link structure still carried traces of real cost. Creating and curating links required time, judgment, and attention, so links functioned as a rough proxy for orientation. But because that signal was only inferred from a proxy, it could eventually be gamed. Once the metric became legible and profitable to manipulate, the proxy detached from the underlying cost and the ranking signal degraded, a familiar instance of Goodhart’s Law \cite{goodhart1975problems}.
+This differs from the web graph PageRank originally analyzed. A hyperlink was an ambiguous and indirect signal: it could mean endorsement, citation, criticism, convenience, or spam. Because PageRank inferred orientation from this proxy, the ranking signal degraded once the proxy became profitable to manipulate, a familiar case of Goodhart's Law \cite{goodhart1975problems}. A Chronicle event is explicit, signed, directional, and costly. It says who oriented, what they oriented toward, in which direction, and with what magnitude.
 
-The aim here is similar recursive extraction, but from a graph whose magnitudes are explicit, signed, and backed by real cost.
+The aim is therefore similar to PageRank, but applied to a different signal substrate. PageRank extracted importance from a graph of hyperlinks. The reference algorithm extracts actor reputation from a graph of public costly orientation, then uses that reputation to weight subject trust scores.
 
 \section{Resistance to Manipulation}
 
@@ -353,34 +354,120 @@ These are not properties of the protocol, but of the algorithms built on top of 
 
 We have proposed a base-layer protocol for public trust signaling on the internet. Instead of relying on cheap, fragmented, and platform-local signals, the protocol makes orientation costly and publicly verifiable. Nodes operate without global coordination. They accept fee-paying events, relay them, group them into batches, anchor batch roots to Bitcoin, and publish the corresponding batch data off chain. Downstream services can then use that public record to estimate trust profiles, compute reputation, and build useful interfaces on top.
 
-We have also outlined a baseline approach to trust computation in which subject scores are shaped not only by sacrifice, but by the public usefulness of their sources. In this way, the same orientation graph that records costly action can also support recursive reputation and increasing resistance to manipulation over time.
+We have also outlined a reference signed PageRank algorithm in which actor reputation is computed recursively from the public orientation graph, and subject trust scores are computed from reputation-weighted orientations. In this way, the same orientation graph that records costly action can also support recursive reputation and increasing resistance to manipulation over time.
 
 The protocol is not a replacement for reviews, ratings, or existing reputation systems. Reviews provide context and explanation; Chronicle adds magnitude and accountability through publicly verifiable sacrifice. 
 
 The protocol changes the economics of influence by making trust signaling costly and accountable. It offers a shared coordination layer through which trust-relevant judgments can become more public, more reusable across contexts, and more resistant to manipulation across the web.
 
 \appendix
-\section{Baseline Q/R/U Update Equations}
 
-The baseline proposal computes three linked quantities iteratively: subject score \(Q\), actor reputation \(R\), and event usefulness \(U\).
+\section{Reference Signed PageRank Algorithm}
 
-Let \(a_e\) denote the signed sacrifice attached to event \(e\). Let \(\mathrm{actor}(e)\) denote the public key that authored event \(e\). Let \(e \to s\) mean that event \(e\) points to subject \(s\), \(e' \to e\) that event \(e'\) points to prior event \(e\), and \(e \to p\) that event \(e\) points directly to actor \(p\). Let \(E_p\) be the set of events authored by actor \(p\).
+This appendix describes one PageRank-style reference algorithm for computing actor reputation and subject quality from a Chronicle graph. The purpose is to outline a basic way the orientation graph can be interpreted. It omits several features that production trust-computation methods may need, such as time decay, and a stronger treatment of adversarial clusters. Many other ranking methods can be developed on top of the same public record.
 
-\[
-Q_s^{(t+1)} = \sum_{e \to s} a_e \, R_{\mathrm{actor}(e)}^{(t)}
-\]
+\subsection{From PageRank to Signed Reputation}
 
-\[
-U_e^{(t+1)} = \sum_{e' \to e} a_{e'} \, R_{\mathrm{actor}(e')}^{(t)}
-\]
+PageRank computes recursive importance from a graph of links between pages \cite{page1999pagerank}. If \(A\) is the link matrix and \(R\) is the rank vector, PageRank seeks a fixed point of the form \(R = cRA\). Operationally, this fixed point is computed by repeatedly propagating rank through the graph until the rank vector stabilizes.
+
+With an external rank source \(E\), the damped iterative form can be written as
 
 \[
-R_p^{(t+1)} = \alpha \sum_{e \in E_p} U_e^{(t)} + \beta \sum_{e \to p} a_e \, R_{\mathrm{actor}(e)}^{(t)}
+R^{(t+1)} = dR^{(t)}A + (1-d)E,
 \]
 
-In words: a subject's score is the reputation-weighted sum of orientations toward it; an event's usefulness is the reputation-weighted sum of later orientations toward that event; and an actor's reputation is updated from both the usefulness of that actor's prior events and direct orientations toward the actor.
+where \(d \in (0,1)\) is the damping factor. The source \(E\) injects rank from outside the link graph and prevents rank from being trapped in sinks.
 
-This is a minimal baseline rather than a finished standard. Different downstream services may choose different weighting, normalization, damping, or time-decay schemes.
+Our algorithm keeps this fixed-point structure but changes the meaning of the graph.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\hline
+\textbf{PageRank} & \textbf{Reference algorithm} \\
+\hline
+page & actor \\
+hyperlink & signed costly orientation \\
+page rank & actor reputation \\
+external rank source \(E\) & positive inbound sacrifice \\
+link matrix \(A\) & signed influence matrix \\
+\hline
+\end{tabular}
+\end{table}
+
+The result is a signed PageRank-style computation over actors.
+
+\subsection{Influence Matrix}
+
+Let \(o_{u,v}\) be the signed total orientation from actor \(u\) toward actor \(v\), including orientations toward \(v\) directly and orientations toward events authored by \(v\). For each actor \(u\), define total outgoing sacrifice as \(S_u = \sum_{x \ne u} |o_{u,x}|\). Self-loops are not routed through the recursive influence matrix.
+
+The signed influence matrix is defined by \(A_{u,v} = o_{u,v}/S_u\) when \(S_u > 0\) and \(u \ne v\), and by \(A_{u,v}=0\) otherwise. Thus the absolute values in each non-empty row sum to one: \(\sum_v |A_{u,v}| = 1\).
+
+Actors with no outgoing orientations have zero rows. Unlike ordinary PageRank treatments that redistribute dangling-page rank across the graph, this algorithm does not treat a silent actor as implicitly orienting toward everyone.
+
+The matrix \(A\) routes existing reputation. The source vector \(E\) determines where reputation enters.
+
+\subsection{External Rank Source}
+
+The external rank source \(E\) is derived from positive inbound sacrifice. Let \(b_v\) be the total positive sacrifice oriented toward actor \(v\), including positive orientations toward \(v\) directly and positive orientations toward events authored by \(v\).
+
+Only positive orientations contribute to \(E\). Negative orientations may affect reputation through signed recursive propagation, but they do not create positive source rank.
+
+This algorithm does not attempt to distinguish self-funded and other-funded source rank. Actors can create multiple keys, so that distinction is not reliable at the graph level. What matters for the reference computation is that the sacrifice is public, costly, and irreversible.
+
+Let \(B = \sum_x b_x\). If \(B > 0\), set \(E_v = b_v/B\). If \(B = 0\), use the uniform source \(E_v = 1/n\). In either case, \(E\) is a nonnegative source vector normalized so that \(\|E\|_1 = 1\).
+
+\subsection{Iteration}
+
+Actor reputation is initialized from the source, \(R^{(0)} = E\), and then iterated until convergence:
+
+\[
+R^{(t+1)} = dR^{(t)}A + (1-d)E.
+\]
+
+In the reference implementation, \(d = 0.85\). Iteration stops when \(\|R^{(t+1)} - R^{(t)}\|_1 < \varepsilon\).
+
+Unlike ordinary PageRank, the reputation vector is signed. It is not interpreted as a probability distribution and is not required to satisfy \(\|R\|_1 = 1\). For output, the raw vector may be rescaled so displayed actor reputation lies in the range \([-1,1]\).
+
+\subsection{Subject Quality}
+
+After actor reputation converges, subjects are scored directly. The subject quality score \(Q(s)\) is the reputation-weighted sum of orientations toward subject \(s\), using only actors with positive reputation:
+
+\[
+Q(s)
+=
+\sum_{e:\,\mathrm{subject}(e)=s}
+\mathrm{amount}(e)\cdot
+\max\!\bigl(0,R_{\mathrm{actor}(e)}\bigr).
+\]
+
+Actors with negative reputation contribute no weight. This avoids giving negatively reputable actors inverted authority. A large positive or negative orientation from an actor with negative reputation does not move the subject score in this reference algorithm.
+
+For output, subject scores may be rescaled so displayed values lie in the range \([-1,1]\).
+
+\subsection{Event Contribution}
+
+Event contribution explains which prior actions affected an actor's reputation. This is useful feedback for actors: reputation is not only a global score, but a trail of public orientations that helped or harmed it.
+
+Events are not recursive reputation nodes in this reference algorithm. During reputation computation, an orientation toward a prior event is treated as an orientation toward the actor who authored that event. After reputation has converged, we can attribute part of the resulting reputation flow back to the specific events that were judged. This makes it possible to show which public actions affected an actor's reputation without making every event a full recursive node in the matrix.
+
+The method is simple: look at later orientations toward a prior event and weight each one by the final reputation of the actor who made it. Let \(\mathcal{H}(e)\) be the set of orientation events that target prior event \(e\). The contribution of \(e\) is
+
+\[
+C(e)
+=
+\sum_{h \in \mathcal{H}(e)}
+\frac{d\,R_{\mathrm{actor}(h)}\,\mathrm{amount}(h)}
+{S_{\mathrm{actor}(h)}}.
+\]
+
+Positive \(C(e)\) means the event helped its author's reputation; negative \(C(e)\) means it harmed it.
+
+\subsection{Summary}
+
+This reference algorithm adapts PageRank from a graph of hyperlinks into a signed influence matrix over public costly orientation.
+
+The source vector \(E\) decides where reputation enters. The influence matrix \(A\) decides how reputation flows. The reputation vector \(R\) is the recursive actor score produced by repeated propagation. The subject quality score \(Q\) is computed afterward by weighting subject orientations according to actor reputation.
 
 \begin{thebibliography}{9}
 
