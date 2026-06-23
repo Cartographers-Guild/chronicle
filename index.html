@@ -6,7 +6,7 @@
     <title>Chronicle</title>
     <meta
       name="description"
-      content="Chronicle is a protocol for public trust and accountability on the web."
+      content="Chronicle is an open protocol for creating public credibility signals from costly, signed, verifiable digital actions."
     >
     <meta
       property="og:title"
@@ -14,7 +14,7 @@
     >
     <meta
       property="og:description"
-      content="An open protocol for signed orientations, publicly verifiable sacrifice, and shared trust signals."
+      content="An open protocol for creating public credibility signals from costly, signed, verifiable digital actions."
     >
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://chronicle-network.org/">
@@ -25,7 +25,7 @@
     >
     <meta
       name="twitter:description"
-      content="An open protocol for signed orientations, publicly verifiable sacrifice, and shared trust signals."
+      content="An open protocol for creating public credibility signals from costly, signed, verifiable digital actions."
     >
     <link rel="canonical" href="https://chronicle-network.org/">
     <link rel="stylesheet" href="/styles.css">
@@ -52,65 +52,157 @@
 
         <section class="hero">
           <h1>An open protocol for public trust and accountability on the web</h1>
-          <p class="hero-summary">
-            Chronicle turns costly digital action into a public graph of shared
-            evidence that clients can use to compute trust, reputation, and other
-            signals.
-          </p>
-
-          <nav class="home-docs" aria-label="Primary documentation">
-            <a class="home-doc-link" href="/protocol/cip-01/">
-              <span class="home-doc-title">Protocol specification</span>
-            </a>
-            <a class="home-doc-link" href="/registry/">
-              <span class="home-doc-title">Kind registry</span>
-            </a>
-            <a class="home-doc-link" href="/public/chronicle.pdf">
-              <span class="home-doc-title">Whitepaper</span>
-            </a>
-          </nav>
-
-          <p class="hero-secondary">
-            The broader philosophical framing appears in
-            <a href="https://cartographersguild.substack.com/p/a-compass-for-the-good">Compass for the Good</a>.
-          </p>
+          <div class="hero-mini-essay">
+            <p>
+              The internet made information cheap to publish and distribute.
+              That was a real gain.
+            </p>
+            <p>
+              But it also made signals much cheaper to fake. Spam emails, fake
+              reviews, bot accounts, synthetic content, and scam domains now
+              litter the web. In this environment, the question becomes:
+            </p>
+            <p>
+              <strong>What should be trusted?</strong>
+            </p>
+            <p>
+              Today there is no public evidence layer that can answer this
+              question. If there were, email clients, web browsers, smartphones,
+              forums, search engines, and social platforms could consult this
+              record to filter spam, warn against dangerous domains, and protect
+              users against harm.
+            </p>
+            <p>
+              Chronicle creates a public record of costly trust signals.
+            </p>
+            <p>
+              And no, it is not a new blockchain.
+            </p>
+            <p>
+              The idea is simple: anyone can publish an orientation event that
+              points toward or away from a specific subject, such as a website,
+              email address, phone number, account, message, or prior Chronicle
+              event.
+            </p>
+            <p>
+              Here is Bob orienting against scam.shop:
+            </p>
+            <pre><code>["web:domain", "scam.shop", -1000, "bob_pub", 1731088810123, "bob_sig"]</code></pre>
+            <p>
+              To avoid becoming another cheap signal, publishing an event
+              requires sacrificing a chosen amount of monetary value. In this
+              case, Bob sacrifices 1000 millisatoshis of Bitcoin.
+            </p>
+            <p>
+              Similar to
+              <a href="https://opentimestamps.org/">OpenTimestamps</a>, the
+              chain is used only for anchoring. Chronicle events live off-chain.
+            </p>
+            <p>
+              The data is public and can be used by email clients, web browsers,
+              forums, wallets, search engines, and social platforms to compute
+              trust, filter spam, rank content, and warn against dangerous
+              domains.
+            </p>
+            <p>
+              See:
+            </p>
+            <ul>
+              <li>
+                <a href="/public/chronicle.pdf"><strong>Whitepaper</strong></a>
+                for the technical and conceptual overview
+              </li>
+              <li>
+                <a href="https://github.com/Cartographers-Guild/chronicle/blob/main/CIP-01.md"><strong>Protocol specification</strong></a>
+                for clients and nodes
+              </li>
+              <li>
+                <a href="/registry"><strong>Event registry</strong></a>
+                for initial event kinds
+              </li>
+            </ul>
+          </div>
         </section>
       </header>
-
+      
       <section class="home-section">
         <div class="section-intro">
-          <h2>How Chronicle works</h2>
+          <h2>The PageRank intuition</h2>
         </div>
 
-        <ol class="home-steps home-steps-compact">
-          <li class="home-step">
-            <strong>A client publishes one of the events from the <a href="/registry/">registry</a></strong>
-            For example, a client can publish an
-            <a href="/registry/kinds/email/verify/v1.0.0/"><code>email:verify</code></a>
-            event for <code>alice@example.com</code> and back it with real
-            sacrifice.
-          </li>
-          <li class="home-step">
-            <strong>A Chronicle node validates, batches, and anchors it</strong>
-            The node validates the event, publishes it off-chain in a batch, and
-            anchors the batch root hash to Bitcoin.
-          </li>
-          <li class="home-step">
-            <strong>Other clients can use that public record</strong>
-            Other clients can use that public record as one input when judging
-            whether future messages from <code>alice@example.com</code> are
-            trustworthy.
-          </li>
-        </ol>
+        <div class="home-reading-stack">
+          <p>
+            Chronicle works in two ways:
+          </p>
+          <p>
+            1. It attaches cost to orientation.<br>
+            2. It makes actors recursively accountable for orientation.
+          </p>
+          <p>
+            Both can be understood through the intuition behind Google's
+            PageRank.
+          </p>
+          <p>
+            A link from one page to another was a small act of orientation: one
+            page pointing to another as relevant or important. A page became
+            important when many pages linked to it, or when a few
+            already-important pages linked to it. Importance flowed recursively
+            through the graph.
+          </p>
+          <p>
+            Chronicle generalizes that structure.
+          </p>
+          <p>
+            A link is replaced by a signed, costly orientation event. The event
+            can point toward or away from a subject. That subject can be a
+            website, email address, phone number, account, message, prior
+            Chronicle event, or another canonical digital object.
+          </p>
+          <p>
+            For example, Bob can orient against <code>scam.shop</code>:
+          </p>
+          <pre><code>["web:domain", "scam.shop", -1000, "bob_pub", 1731088810123, "bob_sig"]</code></pre>
+          <p>
+            This event is not just an opinion. It is a public action with
+            measurable cost.
+          </p>
+          <p>
+            Clients do not have to treat all events equally. An orientation from
+            a credible actor can carry more weight than an orientation from an
+            unknown or low-reputation actor. And credibility itself can be
+            computed recursively from how others have oriented toward that actor
+            and their past events.
+          </p>
+          <p>
+            This means good actors can inherit weight from the credible graph
+            around them and become influential without personally being wealthy.
+          </p>
+          <p>
+            By contrast, a wealthy attacker is limited if their support comes
+            only from an isolated cluster of fake or low-reputation accounts.
+          </p>
+          <p>
+            The web's link structure was implicit, ambiguous, and cheap to
+            manipulate. A link could mean endorsement, criticism, citation,
+            humor, or spam.
+          </p>
+          <p>
+            Chronicle makes orientation explicit: toward or away, signed,
+            costly, and accountable.
+          </p>
+          <p>
+            Clients can then compute trust and reputation from the public graph.
+          </p>
+        </div>
       </section>
 
-      <section class="home-section home-section-note">
-        <p class="note">
-          Chronicle is being developed in public. Open an issue on
-          <a href="https://github.com/cartographers-guild/chronicle/issues">GitHub</a>
-          if you want to propose a refinement, suggest a new kind for the
-          registry, point to prior art, or raise a question.
-        </p>
+    
+      <section class="home-section">
+        <div class="section-intro">
+          <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-list" id="objection-grid"></div>
       </section>
     </main>
 
@@ -120,5 +212,146 @@
         <span>Released under the MIT License</span>
       </p>
     </footer>
+
+    <script>
+      const objectionEntries = [
+        {
+          question: "If events cost money, don't wealthy actors have more influence?",
+          answer: [
+            "Not automatically.",
+            "Wealth can buy more raw signal, but it cannot automatically buy credibility. Clients can weigh events by the reputation of the actor who published them, and that reputation depends on how other credible actors have oriented toward them in the past.",
+            "This is similar to PageRank. A website does not rank highly merely because it links to itself. It gains weight when other pages, especially important pages, link to it. In Chronicle, an actor gains influence by receiving support from the wider graph."
+          ]
+        },
+        {
+          question: "What if they pay someone else for reputation?",
+          answer: [
+            "Then the person taking the payment puts their own reputation at risk.",
+            "If a reputable actor orients toward someone, they route some of their influence to that person. But this leaves a public trail. If that influence is later abused, others can see where it came from, and withdraw their support from the bribed actor. As a result, that actor loses reputation and stops passing as much influence onward.",
+            "So while the bribe may be private, the public orientation remains visible and accountable."
+          ]
+        },
+        {
+          question: "Why would anyone care more about reputation than money?",
+          answer: [
+            "Because reputation becomes valuable when clients use it.",
+            "If email clients, browsers, forums, search engines, wallets, and social platforms use Chronicle data to filter spam, warn about dangerous domains, rank comments, or prioritize trusted actors, then reputation starts to govern reach and access, and online identity becomes something worth cultivating over time rather than cheaply discarding.",
+            "In a civilized context, people often avoid scams and bribes because there are real consequences like social ruin. Chronicle tries to replicate that restraint online."
+          ]
+        },
+        {
+          question: "Why use Bitcoin?",
+          answer: [
+            "Bitcoin gives Chronicle a public, verifiable, censorship-resistant way to prove irreversible monetary sacrifice.",
+            "Chronicle is not a new blockchain. Events can be published off-chain, batched by Chronicle nodes, and anchored to Bitcoin so anyone can verify that the required sacrifice occurred.",
+            "Bitcoin is used as the cost anchor, not as the whole system."
+          ]
+        },
+        {
+          question: "Why irreversible sacrifice? Why not just pay a fee?",
+          answer: [
+            "Chronicle needs a signal that cannot be cheaply faked, refunded, reclaimed, or routed to a central authority.",
+            "Irreversible sacrifice is a clean way to show that the actor gave up something real in order to make the signal. Without cost the signal can be spammed endlessly. See this <a href=\"https://cartographersguild.substack.com/p/a-compass-for-the-good\"><strong>essay</strong></a> for a more detailed argument."
+          ]
+        },
+        {
+          question: "Why would anyone sacrifice money?",
+          answer: [
+            "Because some signals are worth paying for. A person may sacrifice value to warn others about a scam, support a useful public resource, or back a domain or email address they control.",
+            "People already spend money, time, and social capital to shape public trust. Chronicle makes one version of that behavior standardized, public, and machine-readable."
+          ]
+        },
+        {
+          question: "Who decides what counts as trustworthy?",
+          answer: [
+            "Clients do.",
+            "There is no single canonical trust score built into the protocol. Chronicle nodes only publish events. Different applications can use different algorithms to compute trust, reputation and other metrics from the public record."
+          ]
+        },
+        {
+          question: "Is this social credit score?",
+          answer: [
+            "No.",
+            "Social credit is top-down. Chronicle is bottom-up. The protocol records public actions; clients choose how to interpret them.",
+            "Different clients can compute different scores from the same graph. A browser may care about domain safety. An email client may care about spam. A forum may care about account reputation. A wallet may care about payment links, phone numbers, or verified domains."
+          ]
+        },
+        {
+          question: "Can Chronicle determine what is true?",
+          answer: [
+            "No.",
+            "Chronicle cannot guarantee that the graph is correct at every moment. The goal of its design is error correction. If the public record diverges from reality, actors who notice the error can publish costly counter-signals. Over time, useful orientation should gain weight, and misleading orientation should become more expensive to sustain.",
+            "Markets are not perfectly priced at every moment either. Their power comes from the correction process. Chronicle attempts to create a similar correction process for trust and credibility."
+          ]
+        },
+        {
+          question: "What if a good actor makes a mistake?",
+          answer: [
+            "A prior Chronicle event can itself become the subject of later orientation through <code>chronicle:event</code>. If a good actor makes a bad call, others can orient against that event instead of the actor's public key. That means clients can judge a specific action rather than only judging the actor as a whole, which also gives the actor precise feedback and a chance to publicly correct the mistake."
+          ]
+        },
+        {
+          question: "What can Chronicle be used for?",
+          answer: [
+            "Chronicle can attach public credibility evidence to many kinds of digital subjects: websites, URLs, email addresses, email messages, phone numbers, accounts, nodes, and prior events.",
+            "That means it could be used by browsers, email clients, search engines, forums, social platforms, and marketplaces to warn before opening a dangerous domain, filter spam emails, rank comments by reputation, or check whether a domain is publicly backed.",
+            "The initial event kind <a href=\"/registry/\"><strong>registry</strong></a> also includes Nostr subjects like events, pubkeys and relays. Nostr clients could integrate with Chronicle to give accounts, likes, posts, and comments weight and recursive accountability, and to filter the feed and comments by public trust and reputation."
+          ]
+        },
+        {
+          question: "What is Chronicle not trying to do?",
+          answer: [
+            "Chronicle is not trying to replace reviews, moderation, or platform-specific reputation systems. It is trying to provide a base signal layer that those systems can then use as input when deciding what to trust, rank, filter, warn against, or ignore."
+          ]
+        },
+        {
+          question: "Is Chronicle live? How can I use it? How can I contribute?",
+          answer: [
+            "Chronicle is still early, and I'm looking for people to help stress-test it.",
+            "The <a href=\"https://github.com/Cartographers-Guild/chronicle/blob/main/CIP-01.md\">protocol specification</a>, <a href=\"/registry/\">event kind registry</a>, and <a href=\"/public/chronicle.pdf\">whitepaper</a> are public. The deeper <a href=\"https://cartographersguild.substack.com/p/geometry-of-action\">theoretical framework</a> for modeling the system is also being developed in public.",
+            "The next step is to build working node software, client integrations, and small experiments that test whether costly public orientation can improve filtering, ranking, and reputation in real applications.",
+            "The most useful contributions right now would be to:"
+          ],
+          list: [
+            "review the <a href=\"https://github.com/Cartographers-Guild/chronicle/blob/main/CIP-01.md\">protocol specification</a>",
+            "review the existing event kinds or propose new ones for the <a href=\"/registry/\">registry</a>",
+            "open an issue on <a href=\"https://github.com/cartographers-guild/chronicle/issues\">GitHub</a> with a question, objection, idea, or refinement",
+            "build a small client integration",
+            "get in touch if you want to collaborate"
+          ]
+        }
+      ];
+
+      const objectionGrid = document.querySelector("#objection-grid");
+
+      objectionEntries.forEach((entry) => {
+        const item = document.createElement("article");
+        item.className = "faq-item";
+
+        const heading = document.createElement("h3");
+        heading.textContent = entry.question;
+        item.append(heading);
+
+        entry.answer.forEach((paragraphText) => {
+          const paragraph = document.createElement("p");
+          paragraph.innerHTML = paragraphText;
+          item.append(paragraph);
+        });
+
+        if (entry.list) {
+          const list = document.createElement("ul");
+
+          entry.list.forEach((itemText) => {
+            const listItem = document.createElement("li");
+            listItem.innerHTML = itemText;
+            list.append(listItem);
+          });
+
+          item.append(list);
+        }
+
+        objectionGrid.append(item);
+      });
+    </script>
   </body>
 </html>

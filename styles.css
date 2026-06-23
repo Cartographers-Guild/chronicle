@@ -39,11 +39,11 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
-.home-body {
+/* .home-body {
   background:
     radial-gradient(circle at top left, rgba(31, 61, 99, 0.12), transparent 28%),
     linear-gradient(180deg, #f7f4ec 0%, #ffffff 26%);
-}
+} */
 
 .home-page {
   width: min(100% - 2rem, 68rem);
@@ -98,11 +98,11 @@ a:focus-visible {
 }
 
 .hero {
-  padding: 4.2rem 0 1.5rem;
+  padding: 2.0rem 0 1.5rem;
 }
 
 .hero h1 {
-  max-width: 18ch;
+  max-width: 24ch;
   font-size: clamp(2.2rem, 5.8vw, 3.9rem);
   font-weight: 500;
   line-height: 1;
@@ -116,6 +116,74 @@ a:focus-visible {
   line-height: 1.7;
 }
 
+.hero-mini-essay {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 50rem;
+  margin-top: 1.5rem;
+  font-size: clamp(1.12rem, 1.9vw, 1.38rem);
+  line-height: 1.68;
+}
+
+.hero-mini-essay p {
+  margin: 0;
+}
+
+.hero-mini-essay ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.hero-mini-essay strong {
+  font-weight: 650;
+}
+
+.hero-mini-essay pre {
+  overflow-x: auto;
+  margin: 0.15rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 0.82em;
+  line-height: 1.4;
+}
+
+.hero-mini-essay code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.home-reading-stack {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 50rem;
+  font-size: clamp(1.06rem, 1.7vw, 1.22rem);
+  line-height: 1.66;
+}
+
+.home-reading-stack p {
+  margin: 0;
+}
+
+.home-reading-stack pre {
+  overflow-x: auto;
+  margin: 0.15rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 0.82em;
+  line-height: 1.4;
+}
+
+.home-reading-stack code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.hero-actions {
+  margin-top: 1.8rem;
+}
+
 .home-docs {
   display: grid;
   gap: 0.65rem;
@@ -123,9 +191,10 @@ a:focus-visible {
 }
 
 .home-doc-link {
-  display: flex;
-  align-items: center;
+  display: grid;
+  align-content: start;
   justify-content: flex-start;
+  gap: 0.25rem;
   min-height: 3.1rem;
   padding: 0.8rem 1rem;
   border: 1px solid var(--border);
@@ -152,17 +221,25 @@ a:focus-visible {
   letter-spacing: 0.01em;
 }
 
-.hero-secondary {
-  max-width: 38rem;
-  margin-top: 1.15rem;
+.home-doc-summary {
+  max-width: 26rem;
   color: var(--muted);
-  font-size: 0.98rem;
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+
+.home-docs-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.home-docs-grid .home-doc-link {
+  min-height: 8rem;
+  padding: 1rem;
 }
 
 .home-section {
   margin-top: 3rem;
   padding-top: 1.6rem;
-  border-top: 1px solid var(--border);
 }
 
 .section-intro {
@@ -175,6 +252,25 @@ a:focus-visible {
   font-weight: 500;
   line-height: 1.1;
   letter-spacing: -0.04em;
+}
+
+.section-intro p {
+  max-width: 44rem;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.home-copy {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 47rem;
+  color: var(--text);
+  font-size: 1.02rem;
+}
+
+.home-copy p {
+  margin: 0;
 }
 
 .home-steps {
@@ -219,6 +315,39 @@ a:focus-visible {
 .home-step strong {
   display: block;
   margin-bottom: 0.35rem;
+}
+
+.faq-list {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 50rem;
+  margin-top: 1.3rem;
+  font-size: clamp(1.06rem, 1.7vw, 1.22rem);
+  line-height: 1.66;
+}
+
+.faq-item h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+
+.faq-item p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.faq-item p + p {
+  margin-top: 0.8rem;
+}
+
+.faq-item ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.8rem 0 0;
+  padding-left: 1.2rem;
 }
 
 .home-section-note {
@@ -373,6 +502,14 @@ h1 {
     justify-content: flex-start;
   }
 
+  .home-docs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-docs-grid .home-doc-link {
+    min-height: auto;
+  }
+
   .summary p,
   .status p {
     font-size: 1rem;
@@ -387,6 +524,7 @@ h1 {
   }
 
   .home-github,
+  .home-github svg {
     max-width: 3rem;
   }
 
