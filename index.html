@@ -159,12 +159,7 @@
             Chronicle event, or another canonical digital object.
           </p>
           <p>
-            For example, Bob can orient against <code>scam.shop</code>:
-          </p>
-          <pre><code>["web:domain", "scam.shop", -1000, "bob_pub", 1731088810123, "bob_sig"]</code></pre>
-          <p>
-            This event is not just an opinion. It is a public action with
-            measurable cost.
+            Because events are public, actors become accountable for what they signal. Because events are costly, they are harder to spam. Because events can point to prior events, the graph can judge not only actors, but specific acts of judgment.
           </p>
           <p>
             Clients do not have to treat all events equally. An orientation from
@@ -193,6 +188,12 @@
           <p>
             Clients can then compute trust and reputation from the public graph.
           </p>
+          <p>
+            See <a href="https://cartographersguild.substack.com/p/geometry-of-action"><strong>this essay</strong></a>
+            for a deeper analysis of Chronicle as a system of costly orientation
+            and recursive accountability.
+            
+          </p>
         </div>
       </section>
 
@@ -220,7 +221,7 @@
           answer: [
             "Not automatically.",
             "Wealth can buy more raw signal, but it cannot automatically buy credibility. Clients can weigh events by the reputation of the actor who published them, and that reputation depends on how other credible actors have oriented toward them in the past.",
-            "This is similar to PageRank. A website does not rank highly merely because it links to itself. It gains weight when other pages, especially important pages, link to it. In Chronicle, an actor gains influence by receiving support from the wider graph."
+            "This is similar to PageRank. A website does not rank highly just because it links to itself. It gains weight when other pages, especially important pages, link to it. In Chronicle, an actor gains influence by receiving support from the wider graph."
           ]
         },
         {
