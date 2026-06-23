@@ -124,7 +124,6 @@ The most useful contributions right now are:
 * propose new kinds for the registry
 * point out failure modes
 * compare Chronicle to prior art
-* suggest algorithm scenarios
 * build a small client or node prototype
 * open an issue with a question, objection, idea, or refinement
 
